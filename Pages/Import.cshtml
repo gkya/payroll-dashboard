@@ -10,23 +10,30 @@
         <p class="lead mb-0">給与明細 PDF を取り込むためのページです。まずは画面の土台から作っていきます。</p>
     </div>
 
+    @if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+    {
+        <div class="alert alert-info" role="alert">
+            @Model.StatusMessage
+        </div>
+    }
+
     <div class="row g-4">
         <div class="col-lg-7">
             <div class="card shadow-sm">
                 <div class="card-body">
                     <h2 class="h4 mb-3">Upload Form</h2>
-                    <p>次のステップで、ここに PDF アップロードフォームを作成します。</p>
+                    <p>今回は送信の流れまで作り、次のステップで保存処理を追加します。</p>
 
-                    <form>
+                    <form method="post" enctype="multipart/form-data">
                         <div class="mb-3">
                             <label class="form-label" for="uploadFile">Payroll PDF</label>
-                            <input class="form-control" id="uploadFile" type="file" disabled />
+                            <input class="form-control" id="uploadFile" type="file" asp-for="UploadFile" accept=".pdf,application/pdf" />
                         </div>
                         <div class="mb-3">
                             <label class="form-label" for="payrollMonth">Payroll Month</label>
-                            <input class="form-control" id="payrollMonth" type="text" placeholder="2026-03" disabled />
+                            <input class="form-control" id="payrollMonth" type="text" asp-for="PayrollMonth" placeholder="2026-03" />
                         </div>
-                        <button class="btn btn-primary" type="button" disabled>Upload</button>
+                        <button class="btn btn-primary" type="submit">Upload</button>
                     </form>
                 </div>
             </div>
