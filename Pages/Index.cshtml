@@ -1,11 +1,41 @@
 ﻿@page
 @model IndexModel
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"] = "Payroll Dashboard";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Hello, World!</h1>
-    <div>このアプリは給与明細を可視化するアプリです。</div>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1 class="display-4">Payroll Dashboard</h1>
+        <p class="lead">給与明細 PDF を取り込み、一覧・集計・可視化する学習用アプリです。</p>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h2 class="h5">Upload</h2>
+                    <p class="card-text">給与明細 PDF をアップロードして、アプリに取り込みます。</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h2 class="h5">List</h2>
+                    <p class="card-text">取り込んだ給与明細を一覧で確認します。</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h2 class="h5">Dashboard</h2>
+                    <p class="card-text">支給額、控除額、手取り額の推移を見える化します。</p>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
