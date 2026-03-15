@@ -1,0 +1,48 @@
+@page
+@model PayrollDashboard.Pages.ImportModel
+@{
+    ViewData["Title"] = "Import";
+}
+
+<div class="py-4">
+    <div class="mb-4">
+        <h1 class="display-5">Import Payroll PDF</h1>
+        <p class="lead mb-0">給与明細 PDF を取り込むためのページです。まずは画面の土台から作っていきます。</p>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="h4 mb-3">Upload Form</h2>
+                    <p>次のステップで、ここに PDF アップロードフォームを作成します。</p>
+
+                    <form>
+                        <div class="mb-3">
+                            <label class="form-label" for="uploadFile">Payroll PDF</label>
+                            <input class="form-control" id="uploadFile" type="file" disabled />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="payrollMonth">Payroll Month</label>
+                            <input class="form-control" id="payrollMonth" type="text" placeholder="2026-03" disabled />
+                        </div>
+                        <button class="btn btn-primary" type="button" disabled>Upload</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h2 class="h4 mb-3">What We Will Build</h2>
+                    <ul class="mb-0">
+                        <li>PDF を選択してアップロードする</li>
+                        <li>支給月やファイル名を保存する</li>
+                        <li>取込結果を一覧画面で確認する</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
