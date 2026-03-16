@@ -1,3 +1,4 @@
+using PayrollDashboard.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
@@ -14,6 +15,8 @@ public class ImportModel : PageModel
     public string? PayrollMonth { get; set; }
 
     public string? StatusMessage { get; private set; }
+
+    public PayrollSlip? CurrentSlip { get; private set; }
 
     public ImportModel(ILogger<ImportModel> logger)
     {
@@ -38,6 +41,13 @@ public class ImportModel : PageModel
             UploadFile.FileName,
             PayrollMonth ?? "(empty)"
         );
+
+        CurrentSlip = new PayrollSlip
+        {
+            FileName = UploadFile.FileName,
+            PayrollMonth = PayrollMonth ?? "(empty)",
+            ImportedAt = DateTimeOffset.Now,
+        };
 
         StatusMessage = $"アップロード受信: {UploadFile.FileName}";
         return Page();

@@ -17,6 +17,25 @@
         </div>
     }
 
+    @if (Model.CurrentSlip is not null)
+    {
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h2 class="h4 mb-3">Latest Imported Slip</h2>
+                <dl class="row mb-0">
+                    <dt class="col-sm-3">File Name</dt>
+                    <dd class="col-sm-9">@Model.CurrentSlip.FileName</dd>
+
+                    <dt class="col-sm-3">Payroll Month</dt>
+                    <dd class="col-sm-9">@Model.CurrentSlip.PayrollMonth</dd>
+
+                    <dt class="col-sm-3">Imported At</dt>
+                    <dd class="col-sm-9">@Model.CurrentSlip.ImportedAt.LocalDateTime.ToString("yyyy-MM-dd HH:mm:ss")</dd>
+                </dl>
+            </div>
+        </div>
+    }
+
     <div class="row g-4">
         <div class="col-lg-7">
             <div class="card shadow-sm">
