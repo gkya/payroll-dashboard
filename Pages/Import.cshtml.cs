@@ -44,7 +44,7 @@ public class ImportModel : PageModel
 
         CurrentSlip = new PayrollSlip
         {
-            FileName = UploadFile.FileName,
+            SourceFileName = UploadFile.FileName,
             PayrollMonth = PayrollMonth ?? "(empty)",
             ImportedAt = DateTimeOffset.Now,
         };
