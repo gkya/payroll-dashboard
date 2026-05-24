@@ -1,4 +1,5 @@
 using PayrollDashboard.Models;
+using PayrollDashboard.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
@@ -7,7 +8,7 @@ namespace PayrollDashboard.Pages;
 public class ImportModel : PageModel
 {
     private readonly ILogger<ImportModel> _logger;
-
+    private readonly PayrollIngestionService _ingestionService;
     [BindProperty]
     public IFormFile? UploadFile { get; set; }
 
@@ -18,9 +19,10 @@ public class ImportModel : PageModel
 
     public PayrollSlip? CurrentSlip { get; private set; }
 
-    public ImportModel(ILogger<ImportModel> logger)
+    public ImportModel(ILogger<ImportModel> logger, PayrollIngestionService ingestionService)
     {
         _logger = logger;
+        _ingestionService = ingestionService;
     }
 
     public void OnGet()
@@ -30,26 +32,16 @@ public class ImportModel : PageModel
 
     public IActionResult OnPost()
     {
-        if (UploadFile is null || UploadFile.Length == 0)
+        if (UploadFile == null || string.IsNullOrEmpty(PayrollMonth))
         {
-            StatusMessage = "PDF ファイルを選択してください。";
+            StatusMessage = "Please select a file and enter the payroll month.";
             return Page();
         }
 
-        _logger.LogInformation(
-            "Payroll upload form posted. FileName: {FileName}, PayrollMonth: {PayrollMonth}",
-            UploadFile.FileName,
-            PayrollMonth ?? "(empty)"
-        );
+        var slip = _ingestionService.Import(UploadFile, PayrollMonth);
+        CurrentSlip = slip;
+        StatusMessage = "File imported successfully.";
 
-        CurrentSlip = new PayrollSlip
-        {
-            SourceFileName = UploadFile.FileName,
-            PayrollMonth = PayrollMonth ?? "(empty)",
-            ImportedAt = DateTimeOffset.Now,
-        };
-
-        StatusMessage = $"アップロード受信: {UploadFile.FileName}";
         return Page();
     }
 }

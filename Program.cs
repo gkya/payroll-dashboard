@@ -2,6 +2,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
+builder.Services.AddScoped<PayrollDashboard.Repositories.IPayrollRepository, PayrollDashboard.Repositories.SqlitePayrollRepository>();
+builder.Services.AddScoped<PayrollDashboard.Services.PayrollIngestionService>();
 
 var app = builder.Build();
 
