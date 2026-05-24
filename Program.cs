@@ -4,6 +4,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 builder.Services.AddScoped<PayrollDashboard.Repositories.IPayrollRepository, PayrollDashboard.Repositories.SqlitePayrollRepository>();
 builder.Services.AddScoped<PayrollDashboard.Services.PayrollIngestionService>();
+builder.Services.AddScoped<PayrollDashboard.Services.IFileStorageService, PayrollDashboard.Services.LocalFileStorageService>();
 
 var app = builder.Build();
 
