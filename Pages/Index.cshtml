@@ -62,15 +62,31 @@
             <div class="tab-pane fade show active" id="salary-tab">
                 @if (Model.SalarySlips.Count > 0)
                 {
+                    var salaryYears = Model.SalarySlips
+                        .Select(s => s.PayrollMonth[..4])
+                        .Distinct().OrderBy(y => y).ToList();
+
                     <div class="card shadow-sm mb-4">
-                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                            <h2 class="h5 mb-0">給与推移</h2>
-                            <div class="btn-group btn-group-sm">
-                                <button class="btn btn-outline-primary active"    onclick="toggle(salaryChart, 0, this)">総支給額</button>
-                                <button class="btn btn-outline-warning active"    onclick="toggle(salaryChart, 1, this)">基本給</button>
-                                <button class="btn btn-outline-danger active"     onclick="toggle(salaryChart, 2, this)">控除合計</button>
-                                <button class="btn btn-outline-success active"    onclick="toggle(salaryChart, 3, this)">手取り額</button>
-                                <button class="btn btn-outline-secondary active"  onclick="toggle(salaryChart, 4, this)">残業時間</button>
+                        <div class="card-header bg-light">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h2 class="h5 mb-0">給与推移</h2>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-primary active"   onclick="toggle(salaryChart, 0, this)">総支給額</button>
+                                    <button class="btn btn-outline-warning active"   onclick="toggle(salaryChart, 1, this)">基本給</button>
+                                    <button class="btn btn-outline-danger active"    onclick="toggle(salaryChart, 2, this)">控除合計</button>
+                                    <button class="btn btn-outline-success active"   onclick="toggle(salaryChart, 3, this)">手取り額</button>
+                                    <button class="btn btn-outline-secondary active" onclick="toggle(salaryChart, 4, this)">残業時間</button>
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <span class="me-2 small text-muted">年度：</span>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-dark active salary-year-btn" data-year="all" onclick="filterSalary('all')">全て</button>
+                                    @foreach (var year in salaryYears)
+                                    {
+                                        <button class="btn btn-outline-dark salary-year-btn" data-year="@year" onclick="filterSalary('@year')">@year 年</button>
+                                    }
+                                </div>
                             </div>
                         </div>
                         <div class="card-body">
@@ -80,7 +96,7 @@
 
                     <div class="card shadow-sm mb-4">
                         <div class="table-responsive">
-                            <table class="table table-hover mb-0">
+                            <table id="salary-table" class="table table-hover mb-0">
                                 <thead class="table-light">
                                     <tr>
                                         <th>支給月</th>
@@ -95,7 +111,7 @@
                                 <tbody>
                                     @foreach (var slip in Model.SalarySlips)
                                     {
-                                        <tr>
+                                        <tr data-year="@slip.PayrollMonth[..4]">
                                             <td>@slip.PayrollMonth</td>
                                             <td class="text-end">@(slip.GrossAmount?.ToString("N0") ?? "-")</td>
                                             <td class="text-end">@(slip.BasicAmount?.ToString("N0") ?? "-")</td>
@@ -120,13 +136,29 @@
             <div class="tab-pane fade" id="bonus-tab">
                 @if (Model.BonusSlips.Count > 0)
                 {
+                    var bonusYears = Model.BonusSlips
+                        .Select(s => s.PayrollMonth[..4])
+                        .Distinct().OrderBy(y => y).ToList();
+
                     <div class="card shadow-sm mb-4">
-                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                            <h2 class="h5 mb-0">賞与推移</h2>
-                            <div class="btn-group btn-group-sm">
-                                <button class="btn btn-outline-primary active" onclick="toggle(bonusChart, 0, this)">総支給額</button>
-                                <button class="btn btn-outline-danger active"  onclick="toggle(bonusChart, 1, this)">控除合計</button>
-                                <button class="btn btn-outline-success active" onclick="toggle(bonusChart, 2, this)">手取り額</button>
+                        <div class="card-header bg-light">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h2 class="h5 mb-0">賞与推移</h2>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-primary active" onclick="toggle(bonusChart, 0, this)">総支給額</button>
+                                    <button class="btn btn-outline-danger active"  onclick="toggle(bonusChart, 1, this)">控除合計</button>
+                                    <button class="btn btn-outline-success active" onclick="toggle(bonusChart, 2, this)">手取り額</button>
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <span class="me-2 small text-muted">年度：</span>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-dark active bonus-year-btn" data-year="all" onclick="filterBonus('all')">全て</button>
+                                    @foreach (var year in bonusYears)
+                                    {
+                                        <button class="btn btn-outline-dark bonus-year-btn" data-year="@year" onclick="filterBonus('@year')">@year 年</button>
+                                    }
+                                </div>
                             </div>
                         </div>
                         <div class="card-body">
@@ -136,7 +168,7 @@
 
                     <div class="card shadow-sm mb-4">
                         <div class="table-responsive">
-                            <table class="table table-hover mb-0">
+                            <table id="bonus-table" class="table table-hover mb-0">
                                 <thead class="table-light">
                                     <tr>
                                         <th>支給月</th>
@@ -149,7 +181,7 @@
                                 <tbody>
                                     @foreach (var slip in Model.BonusSlips)
                                     {
-                                        <tr>
+                                        <tr data-year="@slip.PayrollMonth[..4]">
                                             <td>@slip.PayrollMonth</td>
                                             <td class="text-end">@(slip.GrossAmount?.ToString("N0") ?? "-")</td>
                                             <td class="text-end">@(slip.DeductionAmount?.ToString("N0") ?? "-")</td>
@@ -235,10 +267,6 @@
 
 @if (Model.PayrollSlips.Count > 0 || Model.AnnualIncomeSlips.Count > 0)
 {
-    string Labels(IList<PayrollSlip> slips) =>
-        string.Join(",", slips.Select(s => $"\"{s.PayrollMonth}\""));
-    string Data(IList<PayrollSlip> slips, Func<PayrollSlip, decimal?> sel) =>
-        string.Join(",", slips.Select(s => sel(s) is { } v ? v.ToString() : "null"));
     string AnnualLabels() =>
         string.Join(",", Model.AnnualIncomeSlips.Select(s => $"\"{s.FiscalYear}年\""));
     string AnnualData(Func<AnnualIncomeSlip, decimal?> sel) =>
@@ -301,27 +329,74 @@
 
         @if (Model.SalarySlips.Count > 0)
         {
+            var salaryJson = System.Text.Json.JsonSerializer.Serialize(Model.SalarySlips.Select(s => new {
+                month = s.PayrollMonth,
+                year  = s.PayrollMonth[..4],
+                gross    = s.GrossAmount,
+                basic    = s.BasicAmount,
+                deduct   = s.DeductionAmount,
+                net      = s.NetAmount,
+                overtime = s.OvertimeHours,
+            }));
             <text>
+        const allSalarySlips = @Html.Raw(salaryJson);
+
         const salaryChart = makeSalaryChart('salaryChart',
-            [@Html.Raw(Labels(Model.SalarySlips))],
-            [@Html.Raw(Data(Model.SalarySlips, s => s.GrossAmount))],
-            [@Html.Raw(Data(Model.SalarySlips, s => s.BasicAmount))],
-            [@Html.Raw(Data(Model.SalarySlips, s => s.DeductionAmount))],
-            [@Html.Raw(Data(Model.SalarySlips, s => s.NetAmount))],
-            [@Html.Raw(Data(Model.SalarySlips, s => s.OvertimeHours))]
+            allSalarySlips.map(s => s.month),
+            allSalarySlips.map(s => s.gross),
+            allSalarySlips.map(s => s.basic),
+            allSalarySlips.map(s => s.deduct),
+            allSalarySlips.map(s => s.net),
+            allSalarySlips.map(s => s.overtime)
         );
+
+        function filterSalary(year) {
+            const f = year === 'all' ? allSalarySlips : allSalarySlips.filter(s => s.year === year);
+            salaryChart.data.labels = f.map(s => s.month);
+            const keys = ['gross', 'basic', 'deduct', 'net', 'overtime'];
+            keys.forEach((k, i) => salaryChart.data.datasets[i].data = f.map(s => s[k]));
+            salaryChart.update();
+            document.querySelectorAll('#salary-table tr[data-year]').forEach(row => {
+                row.style.display = (year === 'all' || row.dataset.year === year) ? '' : 'none';
+            });
+            document.querySelectorAll('.salary-year-btn').forEach(btn =>
+                btn.classList.toggle('active', btn.dataset.year === year));
+        }
             </text>
         }
         @if (Model.BonusSlips.Count > 0)
         {
+            var bonusJson = System.Text.Json.JsonSerializer.Serialize(Model.BonusSlips.Select(s => new {
+                month  = s.PayrollMonth,
+                year   = s.PayrollMonth[..4],
+                gross  = s.GrossAmount,
+                deduct = s.DeductionAmount,
+                net    = s.NetAmount,
+            }));
             <text>
+        const allBonusSlips = @Html.Raw(bonusJson);
+
         const bonusChart = makeChart('bonusChart',
-            [@Html.Raw(Labels(Model.BonusSlips))],
-            [@Html.Raw(Data(Model.BonusSlips, s => s.GrossAmount))],
-            [@Html.Raw(Data(Model.BonusSlips, s => s.BasicAmount))],
-            [@Html.Raw(Data(Model.BonusSlips, s => s.DeductionAmount))],
-            [@Html.Raw(Data(Model.BonusSlips, s => s.NetAmount))]
+            allBonusSlips.map(s => s.month),
+            allBonusSlips.map(s => s.gross),
+            [],
+            allBonusSlips.map(s => s.deduct),
+            allBonusSlips.map(s => s.net)
         );
+
+        function filterBonus(year) {
+            const f = year === 'all' ? allBonusSlips : allBonusSlips.filter(s => s.year === year);
+            bonusChart.data.labels = f.map(s => s.month);
+            bonusChart.data.datasets[0].data = f.map(s => s.gross);
+            bonusChart.data.datasets[2].data = f.map(s => s.deduct);
+            bonusChart.data.datasets[3].data = f.map(s => s.net);
+            bonusChart.update();
+            document.querySelectorAll('#bonus-table tr[data-year]').forEach(row => {
+                row.style.display = (year === 'all' || row.dataset.year === year) ? '' : 'none';
+            });
+            document.querySelectorAll('.bonus-year-btn').forEach(btn =>
+                btn.classList.toggle('active', btn.dataset.year === year));
+        }
             </text>
         }
         @if (Model.AnnualIncomeSlips.Count > 0)
