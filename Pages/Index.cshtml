@@ -43,6 +43,26 @@
 
     @if (Model.PayrollSlips.Count > 0)
     {
+        var ordered = Model.PayrollSlips.OrderBy(s => s.PayrollMonth).ToList();
+        var labels    = string.Join(",", ordered.Select(s => $"\"{s.PayrollMonth}\""));
+        var grossData = string.Join(",", ordered.Select(s => s.GrossAmount.HasValue     ? s.GrossAmount.Value.ToString()     : "null"));
+        var deductData= string.Join(",", ordered.Select(s => s.DeductionAmount.HasValue ? s.DeductionAmount.Value.ToString() : "null"));
+        var netData   = string.Join(",", ordered.Select(s => s.NetAmount.HasValue       ? s.NetAmount.Value.ToString()       : "null"));
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h2 class="h5 mb-0">推移グラフ</h2>
+                <div class="btn-group btn-group-sm" role="group">
+                    <button type="button" class="btn btn-outline-primary active" onclick="toggleDataset(0, this)">総支給額</button>
+                    <button type="button" class="btn btn-outline-danger active"  onclick="toggleDataset(1, this)">控除合計</button>
+                    <button type="button" class="btn btn-outline-success active" onclick="toggleDataset(2, this)">手取り額</button>
+                </div>
+            </div>
+            <div class="card-body">
+                <canvas id="payrollChart" height="80"></canvas>
+            </div>
+        </div>
+
         <div class="card shadow-sm">
             <div class="card-header bg-light">
                 <h2 class="h5 mb-0">Imported Payroll Slips</h2>
@@ -85,3 +105,68 @@
         </div>
     }
 </div>
+
+@if (Model.PayrollSlips.Count > 0)
+{
+    var ordered    = Model.PayrollSlips.OrderBy(s => s.PayrollMonth).ToList();
+    var labels     = string.Join(",", ordered.Select(s => $"\"{s.PayrollMonth}\""));
+    var grossData  = string.Join(",", ordered.Select(s => s.GrossAmount.HasValue     ? s.GrossAmount.Value.ToString()     : "null"));
+    var deductData = string.Join(",", ordered.Select(s => s.DeductionAmount.HasValue ? s.DeductionAmount.Value.ToString() : "null"));
+    var netData    = string.Join(",", ordered.Select(s => s.NetAmount.HasValue       ? s.NetAmount.Value.ToString()       : "null"));
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const chart = new Chart(document.getElementById('payrollChart'), {
+            type: 'line',
+            data: {
+                labels: [@Html.Raw(labels)],
+                datasets: [
+                    {
+                        label: '総支給額',
+                        data: [@Html.Raw(grossData)],
+                        borderColor: 'rgb(13, 110, 253)',
+                        backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                        tension: 0.3,
+                        fill: false,
+                    },
+                    {
+                        label: '控除合計',
+                        data: [@Html.Raw(deductData)],
+                        borderColor: 'rgb(220, 53, 69)',
+                        backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                        tension: 0.3,
+                        fill: false,
+                    },
+                    {
+                        label: '手取り額',
+                        data: [@Html.Raw(netData)],
+                        borderColor: 'rgb(25, 135, 84)',
+                        backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                        tension: 0.3,
+                        fill: false,
+                    },
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false },
+                },
+                scales: {
+                    y: {
+                        ticks: {
+                            callback: value => value.toLocaleString() + ' 円'
+                        }
+                    }
+                }
+            }
+        });
+
+        function toggleDataset(index, btn) {
+            const meta = chart.getDatasetMeta(index);
+            meta.hidden = !meta.hidden;
+            btn.classList.toggle('active');
+            chart.update();
+        }
+    </script>
+}
