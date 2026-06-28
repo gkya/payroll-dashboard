@@ -51,9 +51,10 @@
                 <table class="table table-hover mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th>ID</th>
                             <th>Payroll Month</th>
-                            <th>File Name</th>
+                            <th class="text-end">総支給額</th>
+                            <th class="text-end">控除合計</th>
+                            <th class="text-end">手取り額</th>
                             <th>Status</th>
                             <th>Imported At</th>
                         </tr>
@@ -62,13 +63,14 @@
                         @foreach (var slip in Model.PayrollSlips)
                         {
                             <tr>
-                                <td>@slip.Id</td>
                                 <td>@slip.PayrollMonth</td>
-                                <td>@slip.SourceFileName</td>
+                                <td class="text-end">@(slip.GrossAmount.HasValue ? slip.GrossAmount.Value.ToString("N0") : "-")</td>
+                                <td class="text-end">@(slip.DeductionAmount.HasValue ? slip.DeductionAmount.Value.ToString("N0") : "-")</td>
+                                <td class="text-end">@(slip.NetAmount.HasValue ? slip.NetAmount.Value.ToString("N0") : "-")</td>
                                 <td>
-                                    <span class="badge bg-success">@slip.ImportStatus</span>
+                                    <span class="badge @(slip.ImportStatus == PayrollDashboard.Models.PayrollImportStatus.Parsed ? "bg-success" : "bg-warning")">@slip.ImportStatus</span>
                                 </td>
-                                <td>@slip.ImportedAt.LocalDateTime.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                                <td>@slip.ImportedAt.LocalDateTime.ToString("yyyy-MM-dd HH:mm")</td>
                             </tr>
                         }
                     </tbody>

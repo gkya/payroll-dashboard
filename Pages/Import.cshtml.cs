@@ -32,9 +32,18 @@ public class ImportModel : PageModel
 
     public IActionResult OnPost()
     {
-        if (UploadFile == null || string.IsNullOrEmpty(PayrollMonth))
+        if (UploadFile == null)
         {
-            StatusMessage = "Please select a file and enter the payroll month.";
+            StatusMessage = "Please select a file.";
+            return Page();
+        }
+
+        if (string.IsNullOrEmpty(PayrollMonth))
+            PayrollMonth = PayrollIngestionService.ExtractMonthFromFileName(UploadFile.FileName) ?? string.Empty;
+
+        if (string.IsNullOrEmpty(PayrollMonth))
+        {
+            StatusMessage = "支給月を入力してください。ファイル名から自動取得できませんでした。";
             return Page();
         }
 

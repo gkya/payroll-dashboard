@@ -5,6 +5,7 @@ builder.Services.AddControllers();
 builder.Services.AddRazorPages();
 builder.Services.AddScoped<PayrollDashboard.Repositories.IPayrollRepository, PayrollDashboard.Repositories.SqlitePayrollRepository>();
 builder.Services.AddScoped<PayrollDashboard.Services.PayrollIngestionService>();
+builder.Services.AddScoped<PayrollDashboard.Services.PayrollPdfParser>();
 builder.Services.AddScoped<PayrollDashboard.Services.IFileStorageService, PayrollDashboard.Services.LocalFileStorageService>();
 
 var app = builder.Build();
@@ -17,7 +18,10 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseRouting();
 

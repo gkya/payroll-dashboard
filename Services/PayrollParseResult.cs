@@ -1,0 +1,11 @@
+namespace PayrollDashboard.Services;
+
+public class PayrollParseResult
+{
+    public bool Success { get; set; }
+    public string? Message { get; set; }
+
+    public decimal? GrossAmount { get; set; }
+    public decimal? DeductionAmount { get; set; }
+    public decimal? NetAmount { get; set; }
+}

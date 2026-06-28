@@ -12,6 +12,12 @@ public class PayrollSlip
 
     public PayrollImportStatus ImportStatus { get; set; } = PayrollImportStatus.Imported;
 
+    public decimal? GrossAmount { get; set; }
+
+    public decimal? DeductionAmount { get; set; }
+
+    public decimal? NetAmount { get; set; }
+
     public string? ParseMessage { get; set; }
 
     public DateTimeOffset ImportedAt { get; set; }
