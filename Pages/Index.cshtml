@@ -4,122 +4,89 @@
 @using System.Linq
 @{
     ViewData["Title"] = "Payroll Dashboard";
+    var latestSalary = Model.SalarySlips.LastOrDefault();
+    var latestAnnual = Model.AnnualIncomeSlips.LastOrDefault();
+    var avgOt = Model.SalarySlips.Where(s => s.OvertimeHours.HasValue)
+                    .Select(s => (double)s.OvertimeHours!.Value).DefaultIfEmpty(0).Average();
+    var dateRange = Model.SalarySlips.Count > 0
+        ? $"{Model.SalarySlips.First().PayrollMonth} — {Model.SalarySlips.Last().PayrollMonth} ・ 全 {Model.SalarySlips.Count} ヶ月分"
+        : "データなし";
 }
 
-<div class="container py-5">
-    <div class="text-center mb-5">
-        <h1 class="display-4">Payroll Dashboard</h1>
-        <p class="lead">給与明細 PDF を取り込み、一覧・集計・可視化する学習用アプリです。</p>
-    </div>
+<div class="pr-shell">
 
-    <div class="row g-4 mb-5">
-        <div class="col-md-4">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body">
-                    <h2 class="h5">Upload</h2>
-                    <p class="card-text">給与明細 PDF をアップロードして、アプリに取り込みます。</p>
-                    <a href="/Import" class="btn btn-sm btn-primary">Go to Import</a>
-                </div>
-            </div>
+    @* ── Header ── *@
+    <div class="pr-header">
+        <div>
+            <div class="pr-eyebrow">PAYROLL</div>
+            <h1 class="pr-title">給与ダッシュボード</h1>
+            <div class="pr-subtitle">@dateRange</div>
         </div>
-        <div class="col-md-4">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body">
-                    <h2 class="h5">給与</h2>
-                    <p class="card-text">取り込んだ給与明細を確認します。</p>
-                    <span class="badge bg-secondary">@Model.SalarySlips.Count 件</span>
+        <div class="pr-header-right">
+            @if (Model.PayrollSlips.Count > 0 || Model.AnnualIncomeSlips.Count > 0)
+            {
+                <div class="pr-tabs" id="mainTabs">
+                    <button class="pr-tab active" data-bs-toggle="tab" data-bs-target="#salary-tab">給与</button>
+                    <button class="pr-tab" data-bs-toggle="tab" data-bs-target="#bonus-tab">賞与</button>
+                    <button class="pr-tab" data-bs-toggle="tab" data-bs-target="#annual-tab">源泉徴収票</button>
                 </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body">
-                    <h2 class="h5">賞与</h2>
-                    <p class="card-text">取り込んだ賞与明細を確認します。</p>
-                    <span class="badge bg-secondary">@Model.BonusSlips.Count 件</span>
-                </div>
+            }
+            <div class="pr-theme-toggle" id="themeToggle" onclick="toggleTheme()" role="button" aria-label="テーマ切替">
+                <span class="pr-seg pr-seg--on" id="seg-light">☀ Light</span>
+                <span class="pr-seg" id="seg-dark">☾ Dark</span>
             </div>
         </div>
     </div>
 
+    @* ── KPI row ── *@
     @if (Model.SalarySlips.Count > 0 || Model.AnnualIncomeSlips.Count > 0)
     {
-        var latestSalary = Model.SalarySlips.LastOrDefault();
-        var latestAnnual = Model.AnnualIncomeSlips.LastOrDefault();
-
-        <div class="row g-3 mb-5">
-            <div class="col-sm-6 col-xl-3">
-                <div class="card shadow-sm h-100 border-start border-success border-4">
-                    <div class="card-body">
-                        <div class="text-muted small mb-1">直近の手取り額</div>
-                        <div class="fs-4 fw-bold">
-                            @(latestSalary?.NetAmount.HasValue == true
-                                ? "¥" + latestSalary.NetAmount.Value.ToString("N0")
-                                : "—")
-                        </div>
-                        <div class="text-muted small mt-1">@(latestSalary?.PayrollMonth ?? "—")</div>
-                    </div>
+        <div class="pr-kpi">
+            <div class="pr-kpi-cell">
+                <div class="pr-kpi-label">直近の手取り額</div>
+                <div class="pr-kpi-value">
+                    @(latestSalary?.NetAmount.HasValue == true
+                        ? "¥" + latestSalary.NetAmount.Value.ToString("N0")
+                        : "—")
                 </div>
+                <div class="pr-kpi-meta">@(latestSalary?.PayrollMonth ?? "—")</div>
             </div>
-            <div class="col-sm-6 col-xl-3">
-                <div class="card shadow-sm h-100 border-start border-primary border-4">
-                    <div class="card-body">
-                        <div class="text-muted small mb-1">直近の総支給額</div>
-                        <div class="fs-4 fw-bold">
-                            @(latestSalary?.GrossAmount.HasValue == true
-                                ? "¥" + latestSalary.GrossAmount.Value.ToString("N0")
-                                : "—")
-                        </div>
-                        <div class="text-muted small mt-1">@(latestSalary?.PayrollMonth ?? "—")</div>
-                    </div>
+            <div class="pr-kpi-cell">
+                <div class="pr-kpi-label">直近の総支給額</div>
+                <div class="pr-kpi-value">
+                    @(latestSalary?.GrossAmount.HasValue == true
+                        ? "¥" + latestSalary.GrossAmount.Value.ToString("N0")
+                        : "—")
                 </div>
+                <div class="pr-kpi-meta">@(latestSalary?.PayrollMonth ?? "—")</div>
             </div>
-            <div class="col-sm-6 col-xl-3">
-                <div class="card shadow-sm h-100 border-start border-secondary border-4">
-                    <div class="card-body">
-                        <div class="text-muted small mb-1">直近の残業時間</div>
-                        <div class="fs-4 fw-bold">
-                            @(latestSalary?.OvertimeHours.HasValue == true
-                                ? latestSalary.OvertimeHours.Value.ToString("F2") + " h"
-                                : "—")
-                        </div>
-                        <div class="text-muted small mt-1">@(latestSalary?.PayrollMonth ?? "—")</div>
-                    </div>
+            <div class="pr-kpi-cell">
+                <div class="pr-kpi-label">直近の残業時間</div>
+                <div class="pr-kpi-value">
+                    @(latestSalary?.OvertimeHours.HasValue == true
+                        ? latestSalary.OvertimeHours.Value.ToString("F2")
+                        : "—")<span style="font-size:15px; color:var(--pr-sub); font-weight:500;"> h</span>
                 </div>
+                <div class="pr-kpi-meta">月平均 @(avgOt > 0 ? avgOt.ToString("F1") + " h" : "—")</div>
             </div>
-            <div class="col-sm-6 col-xl-3">
-                <div class="card shadow-sm h-100 border-start border-warning border-4">
-                    <div class="card-body">
-                        <div class="text-muted small mb-1">最新の年収（源泉徴収票）</div>
-                        <div class="fs-4 fw-bold">
-                            @(latestAnnual?.TotalIncome.HasValue == true
-                                ? "¥" + latestAnnual.TotalIncome.Value.ToString("N0")
-                                : "—")
-                        </div>
-                        <div class="text-muted small mt-1">@(latestAnnual != null ? latestAnnual.FiscalYear + " 年" : "—")</div>
-                    </div>
+            <div class="pr-kpi-cell">
+                <div class="pr-kpi-label">最新の年収（源泉徴収票）</div>
+                <div class="pr-kpi-value">
+                    @(latestAnnual?.TotalIncome.HasValue == true
+                        ? "¥" + latestAnnual.TotalIncome.Value.ToString("N0")
+                        : "—")
                 </div>
+                <div class="pr-kpi-meta">@(latestAnnual != null ? latestAnnual.FiscalYear + " 年" : "—")</div>
             </div>
         </div>
     }
 
+    @* ── Tab content ── *@
     @if (Model.PayrollSlips.Count > 0 || Model.AnnualIncomeSlips.Count > 0)
     {
-        <ul class="nav nav-tabs mb-4" role="tablist">
-            <li class="nav-item">
-                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#salary-tab">給与</button>
-            </li>
-            <li class="nav-item">
-                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#bonus-tab">賞与</button>
-            </li>
-            <li class="nav-item">
-                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#annual-tab">源泉徴収票</button>
-            </li>
-        </ul>
-
         <div class="tab-content">
 
-            @* ── 給与タブ ── *@
+            @* 給与タブ *@
             <div class="tab-pane fade show active" id="salary-tab">
                 @if (Model.SalarySlips.Count > 0)
                 {
@@ -127,47 +94,51 @@
                         .Select(s => s.PayrollMonth[..4])
                         .Distinct().OrderBy(y => y).ToList();
 
-                    <div class="card shadow-sm mb-4">
-                        <div class="card-header bg-light">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <h2 class="h5 mb-0">給与推移</h2>
-                                <div class="btn-group btn-group-sm">
-                                    <button class="btn btn-outline-primary active"   onclick="toggle(salaryChart, 0, this)">総支給額</button>
-                                    <button class="btn btn-outline-warning active"   onclick="toggle(salaryChart, 1, this)">基本給</button>
-                                    <button class="btn btn-outline-danger active"    onclick="toggle(salaryChart, 2, this)">控除合計</button>
-                                    <button class="btn btn-outline-success active"   onclick="toggle(salaryChart, 3, this)">手取り額</button>
-                                    <button class="btn btn-outline-secondary active" onclick="toggle(salaryChart, 4, this)">残業時間</button>
-                                </div>
+                    <div class="pr-section">
+                        <div class="pr-section-head">
+                            <div>
+                                <div class="pr-section-title">給与推移</div>
+                                <div class="pr-section-sub">総支給額・手取り額の月次推移</div>
                             </div>
-                            <div class="mt-2">
-                                <span class="me-2 small text-muted">年度：</span>
-                                <div class="btn-group btn-group-sm">
-                                    <button class="btn btn-outline-dark active salary-year-btn" data-year="all" onclick="filterSalary('all')">全て</button>
-                                    @foreach (var year in salaryYears)
-                                    {
-                                        <button class="btn btn-outline-dark salary-year-btn" data-year="@year" onclick="filterSalary('@year')">@year 年</button>
-                                    }
+                            <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
+                                <div class="pr-pill-group">
+                                    <button class="pr-pill active" onclick="toggle(salaryChart,0,this)">総支給額</button>
+                                    <button class="pr-pill active" onclick="toggle(salaryChart,1,this)">基本給</button>
+                                    <button class="pr-pill active" onclick="toggle(salaryChart,2,this)">控除合計</button>
+                                    <button class="pr-pill active" onclick="toggle(salaryChart,3,this)">手取り額</button>
+                                    <button class="pr-pill active" onclick="toggle(salaryChart,4,this)">残業時間</button>
+                                </div>
+                                <div style="display:flex; align-items:center; gap:8px;">
+                                    <span style="font:500 11px/1 var(--pr-font-mono); color:var(--pr-sub);">年度：</span>
+                                    <div class="pr-pill-group">
+                                        <button class="pr-pill active salary-year-btn" data-year="all" onclick="filterSalary('all')">全て</button>
+                                        @foreach (var year in salaryYears)
+                                        {
+                                            <button class="pr-pill salary-year-btn" data-year="@year" onclick="filterSalary('@year')">@year</button>
+                                        }
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="card-body">
-                            <canvas id="salaryChart" height="80"></canvas>
-                        </div>
+                        <canvas id="salaryChart"></canvas>
                     </div>
 
-                    <div class="card shadow-sm mb-4">
+                    <div class="pr-section">
+                        <div class="pr-section-head">
+                            <div class="pr-section-title">給与明細</div>
+                        </div>
                         <div class="table-responsive">
-                            <table id="salary-table" class="table table-hover mb-0">
-                                <thead class="table-light">
+                            <table id="salary-table" class="pr-table">
+                                <thead>
                                     <tr>
-                                        <th>支給月</th>
-                                        <th class="text-end">総支給額</th>
-                                        <th class="text-end">基本給</th>
-                                        <th class="text-end">残業時間</th>
-                                        <th class="text-end">控除合計</th>
-                                        <th class="text-end">控除率</th>
-                                        <th class="text-end">手取り額</th>
-                                        <th class="text-end">手取り率</th>
+                                        <th style="text-align:left;">支給月</th>
+                                        <th>総支給額</th>
+                                        <th>基本給</th>
+                                        <th>残業</th>
+                                        <th>控除合計</th>
+                                        <th>控除率</th>
+                                        <th>手取り額</th>
+                                        <th>手取り率</th>
                                         <th>Status</th>
                                     </tr>
                                 </thead>
@@ -178,29 +149,29 @@
                                             ? slip.DeductionAmount!.Value / slip.GrossAmount!.Value * 100 : (decimal?)null;
                                         var netRate = (slip.GrossAmount is > 0 && slip.NetAmount.HasValue)
                                             ? slip.NetAmount!.Value / slip.GrossAmount!.Value * 100 : (decimal?)null;
-                                        <tr data-year="@slip.PayrollMonth[..4]" onclick="goToSlip(@slip.Id,'salary')" style="cursor:pointer">
+                                        <tr data-year="@slip.PayrollMonth[..4]" onclick="goToSlip(@slip.Id,'salary')">
                                             <td>@slip.PayrollMonth</td>
-                                            <td class="text-end">@(slip.GrossAmount?.ToString("N0") ?? "-")</td>
-                                            <td class="text-end">@(slip.BasicAmount?.ToString("N0") ?? "-")</td>
-                                            <td class="text-end">@(slip.OvertimeHours?.ToString("F2") ?? "-")</td>
-                                            <td class="text-end">@(slip.DeductionAmount?.ToString("N0") ?? "-")</td>
-                                            <td class="text-end">@(deductRate?.ToString("F1") + "%" ?? "-")</td>
-                                            <td class="text-end">@(slip.NetAmount?.ToString("N0") ?? "-")</td>
-                                            <td class="text-end">@(netRate?.ToString("F1") + "%" ?? "-")</td>
-                                            <td><span class="badge @(slip.ImportStatus == PayrollImportStatus.Parsed ? "bg-success" : "bg-warning")">@slip.ImportStatus</span></td>
+                                            <td>@(slip.GrossAmount?.ToString("N0") ?? "-")</td>
+                                            <td>@(slip.BasicAmount?.ToString("N0") ?? "-")</td>
+                                            <td style="color:var(--pr-sub);">@(slip.OvertimeHours?.ToString("F2") ?? "-")</td>
+                                            <td>@(slip.DeductionAmount?.ToString("N0") ?? "-")</td>
+                                            <td style="color:var(--pr-sub);">@(deductRate?.ToString("F1") + "%" ?? "-")</td>
+                                            <td class="td-net">@(slip.NetAmount?.ToString("N0") ?? "-")</td>
+                                            <td style="color:var(--pr-sub);">@(netRate?.ToString("F1") + "%" ?? "-")</td>
+                                            <td><span class="pr-badge @(slip.ImportStatus == PayrollImportStatus.Parsed ? "pr-badge--ok" : "pr-badge--err")">@slip.ImportStatus</span></td>
                                         </tr>
                                     }
                                 </tbody>
-                                <tfoot class="table-light fw-semibold">
+                                <tfoot>
                                     <tr>
                                         <td id="salary-avg-label"></td>
-                                        <td class="text-end" id="salary-avg-gross"></td>
-                                        <td class="text-end" id="salary-avg-basic"></td>
-                                        <td class="text-end" id="salary-avg-overtime"></td>
-                                        <td class="text-end" id="salary-avg-deduct"></td>
-                                        <td class="text-end" id="salary-avg-deduct-rate"></td>
-                                        <td class="text-end" id="salary-avg-net"></td>
-                                        <td class="text-end" id="salary-avg-net-rate"></td>
+                                        <td id="salary-avg-gross"></td>
+                                        <td id="salary-avg-basic"></td>
+                                        <td id="salary-avg-overtime" style="color:var(--pr-sub);"></td>
+                                        <td id="salary-avg-deduct"></td>
+                                        <td id="salary-avg-deduct-rate" style="color:var(--pr-sub);"></td>
+                                        <td id="salary-avg-net" class="td-net"></td>
+                                        <td id="salary-avg-net-rate" style="color:var(--pr-sub);"></td>
                                         <td></td>
                                     </tr>
                                 </tfoot>
@@ -210,11 +181,11 @@
                 }
                 else
                 {
-                    <p class="text-muted">給与データがありません。</p>
+                    <div class="pr-empty">給与データがありません。</div>
                 }
             </div>
 
-            @* ── 賞与タブ ── *@
+            @* 賞与タブ *@
             <div class="tab-pane fade" id="bonus-tab">
                 @if (Model.BonusSlips.Count > 0)
                 {
@@ -222,53 +193,57 @@
                         .Select(s => s.PayrollMonth[..4])
                         .Distinct().OrderBy(y => y).ToList();
 
-                    <div class="card shadow-sm mb-4">
-                        <div class="card-header bg-light">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <h2 class="h5 mb-0">賞与推移</h2>
-                                <div class="btn-group btn-group-sm">
-                                    <button class="btn btn-outline-primary active" onclick="toggle(bonusChart, 0, this)">総支給額</button>
-                                    <button class="btn btn-outline-danger active"  onclick="toggle(bonusChart, 1, this)">控除合計</button>
-                                    <button class="btn btn-outline-success active" onclick="toggle(bonusChart, 2, this)">手取り額</button>
-                                </div>
+                    <div class="pr-section">
+                        <div class="pr-section-head">
+                            <div>
+                                <div class="pr-section-title">賞与推移</div>
+                                <div class="pr-section-sub">支給回ごとの推移</div>
                             </div>
-                            <div class="mt-2">
-                                <span class="me-2 small text-muted">年度：</span>
-                                <div class="btn-group btn-group-sm">
-                                    <button class="btn btn-outline-dark active bonus-year-btn" data-year="all" onclick="filterBonus('all')">全て</button>
-                                    @foreach (var year in bonusYears)
-                                    {
-                                        <button class="btn btn-outline-dark bonus-year-btn" data-year="@year" onclick="filterBonus('@year')">@year 年</button>
-                                    }
+                            <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
+                                <div class="pr-pill-group">
+                                    <button class="pr-pill active" onclick="toggle(bonusChart,0,this)">総支給額</button>
+                                    <button class="pr-pill active" onclick="toggle(bonusChart,1,this)">控除合計</button>
+                                    <button class="pr-pill active" onclick="toggle(bonusChart,2,this)">手取り額</button>
+                                </div>
+                                <div style="display:flex; align-items:center; gap:8px;">
+                                    <span style="font:500 11px/1 var(--pr-font-mono); color:var(--pr-sub);">年度：</span>
+                                    <div class="pr-pill-group">
+                                        <button class="pr-pill active bonus-year-btn" data-year="all" onclick="filterBonus('all')">全て</button>
+                                        @foreach (var year in bonusYears)
+                                        {
+                                            <button class="pr-pill bonus-year-btn" data-year="@year" onclick="filterBonus('@year')">@year</button>
+                                        }
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="card-body">
-                            <canvas id="bonusChart" height="80"></canvas>
-                        </div>
+                        <canvas id="bonusChart"></canvas>
                     </div>
 
-                    <div class="card shadow-sm mb-4">
+                    <div class="pr-section">
+                        <div class="pr-section-head">
+                            <div class="pr-section-title">賞与明細</div>
+                        </div>
                         <div class="table-responsive">
-                            <table id="bonus-table" class="table table-hover mb-0">
-                                <thead class="table-light">
+                            <table id="bonus-table" class="pr-table">
+                                <thead>
                                     <tr>
-                                        <th>支給月</th>
-                                        <th class="text-end">総支給額</th>
-                                        <th class="text-end">控除合計</th>
-                                        <th class="text-end">手取り額</th>
+                                        <th style="text-align:left;">支給月</th>
+                                        <th>総支給額</th>
+                                        <th>控除合計</th>
+                                        <th>手取り額</th>
                                         <th>Status</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach (var slip in Model.BonusSlips)
                                     {
-                                        <tr data-year="@slip.PayrollMonth[..4]" onclick="goToSlip(@slip.Id,'bonus')" style="cursor:pointer">
+                                        <tr data-year="@slip.PayrollMonth[..4]" onclick="goToSlip(@slip.Id,'bonus')">
                                             <td>@slip.PayrollMonth</td>
-                                            <td class="text-end">@(slip.GrossAmount?.ToString("N0") ?? "-")</td>
-                                            <td class="text-end">@(slip.DeductionAmount?.ToString("N0") ?? "-")</td>
-                                            <td class="text-end">@(slip.NetAmount?.ToString("N0") ?? "-")</td>
-                                            <td><span class="badge @(slip.ImportStatus == PayrollImportStatus.Parsed ? "bg-success" : "bg-warning")">@slip.ImportStatus</span></td>
+                                            <td>@(slip.GrossAmount?.ToString("N0") ?? "-")</td>
+                                            <td>@(slip.DeductionAmount?.ToString("N0") ?? "-")</td>
+                                            <td class="td-net">@(slip.NetAmount?.ToString("N0") ?? "-")</td>
+                                            <td><span class="pr-badge @(slip.ImportStatus == PayrollImportStatus.Parsed ? "pr-badge--ok" : "pr-badge--err")">@slip.ImportStatus</span></td>
                                         </tr>
                                     }
                                 </tbody>
@@ -278,39 +253,43 @@
                 }
                 else
                 {
-                    <p class="text-muted">賞与データがありません。</p>
+                    <div class="pr-empty">賞与データがありません。</div>
                 }
             </div>
 
-            @* ── 源泉徴収票タブ ── *@
+            @* 源泉徴収票タブ *@
             <div class="tab-pane fade" id="annual-tab">
                 @if (Model.AnnualIncomeSlips.Count > 0)
                 {
-                    <div class="card shadow-sm mb-4">
-                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                            <h2 class="h5 mb-0">年収推移</h2>
-                            <div class="btn-group btn-group-sm">
-                                <button class="btn btn-outline-primary active"  onclick="toggle(annualChart, 0, this)">支払金額</button>
-                                <button class="btn btn-outline-warning active"  onclick="toggle(annualChart, 1, this)">給与所得控除後</button>
-                                <button class="btn btn-outline-danger active"   onclick="toggle(annualChart, 2, this)">所得控除合計</button>
-                                <button class="btn btn-outline-success active"  onclick="toggle(annualChart, 3, this)">源泉徴収税額</button>
+                    <div class="pr-section">
+                        <div class="pr-section-head">
+                            <div>
+                                <div class="pr-section-title">年収推移</div>
+                                <div class="pr-section-sub">源泉徴収票ベース</div>
+                            </div>
+                            <div class="pr-pill-group">
+                                <button class="pr-pill active" onclick="toggle(annualChart,0,this)">支払金額</button>
+                                <button class="pr-pill active" onclick="toggle(annualChart,1,this)">給与所得控除後</button>
+                                <button class="pr-pill active" onclick="toggle(annualChart,2,this)">所得控除合計</button>
+                                <button class="pr-pill active" onclick="toggle(annualChart,3,this)">源泉徴収税額</button>
                             </div>
                         </div>
-                        <div class="card-body">
-                            <canvas id="annualChart" height="80"></canvas>
-                        </div>
+                        <canvas id="annualChart"></canvas>
                     </div>
 
-                    <div class="card shadow-sm mb-4">
+                    <div class="pr-section">
+                        <div class="pr-section-head">
+                            <div class="pr-section-title">源泉徴収票一覧</div>
+                        </div>
                         <div class="table-responsive">
-                            <table class="table table-hover mb-0">
-                                <thead class="table-light">
+                            <table class="pr-table">
+                                <thead>
                                     <tr>
-                                        <th>年度</th>
-                                        <th class="text-end">支払金額</th>
-                                        <th class="text-end">給与所得控除後の金額</th>
-                                        <th class="text-end">所得控除の額の合計額</th>
-                                        <th class="text-end">源泉徴収税額</th>
+                                        <th style="text-align:left;">年度</th>
+                                        <th>支払金額</th>
+                                        <th>給与所得控除後の金額</th>
+                                        <th>所得控除の額の合計額</th>
+                                        <th>源泉徴収税額</th>
                                         <th>Status</th>
                                     </tr>
                                 </thead>
@@ -319,11 +298,11 @@
                                     {
                                         <tr>
                                             <td>@slip.FiscalYear 年</td>
-                                            <td class="text-end">@(slip.TotalIncome?.ToString("N0") ?? "-")</td>
-                                            <td class="text-end">@(slip.AfterDeduction?.ToString("N0") ?? "-")</td>
-                                            <td class="text-end">@(slip.TotalDeductions?.ToString("N0") ?? "-")</td>
-                                            <td class="text-end">@(slip.WithholdingTax?.ToString("N0") ?? "-")</td>
-                                            <td><span class="badge @(slip.ImportStatus == PayrollImportStatus.Parsed ? "bg-success" : "bg-warning")">@slip.ImportStatus</span></td>
+                                            <td>@(slip.TotalIncome?.ToString("N0") ?? "-")</td>
+                                            <td>@(slip.AfterDeduction?.ToString("N0") ?? "-")</td>
+                                            <td>@(slip.TotalDeductions?.ToString("N0") ?? "-")</td>
+                                            <td>@(slip.WithholdingTax?.ToString("N0") ?? "-")</td>
+                                            <td><span class="pr-badge @(slip.ImportStatus == PayrollImportStatus.Parsed ? "pr-badge--ok" : "pr-badge--err")">@slip.ImportStatus</span></td>
                                         </tr>
                                     }
                                 </tbody>
@@ -333,7 +312,7 @@
                 }
                 else
                 {
-                    <p class="text-muted">源泉徴収票データがありません。</p>
+                    <div class="pr-empty">源泉徴収票データがありません。</div>
                 }
             </div>
 
@@ -341,10 +320,11 @@
     }
     else
     {
-        <div class="alert alert-info" role="alert">
-            <p class="mb-0">まだデータがありません。<a href="/Import">Import ページ</a>から PDF をアップロードしてください。</p>
+        <div class="pr-empty">
+            まだデータがありません。<a href="/Import">Import</a> から PDF をアップロードしてください。
         </div>
     }
+
 </div>
 
 @if (Model.PayrollSlips.Count > 0 || Model.AnnualIncomeSlips.Count > 0)
@@ -356,48 +336,55 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // 給与専用：右軸に残業時間を追加
+        // ── テーマカラー ──
+        const CHART_COLORS = {
+            light: { gross:'#16161a', net:'#0f766e', deduct:'#e11d48', basic:'#d97706', ot:'#9a9aa0', grid:'rgba(0,0,0,.06)', tick:'#9a9aa0' },
+            dark:  { gross:'#2dd4bf', net:'#a78bfa', deduct:'#f472b6', basic:'#fbbf24', ot:'#566079', grid:'rgba(255,255,255,.06)', tick:'#6b7488' }
+        };
+        function themeKey() { return document.documentElement.classList.contains('dark') ? 'dark' : 'light'; }
+        function C(k) { return CHART_COLORS[themeKey()][k]; }
+
+        // ── Chart builders ──
         function makeSalaryChart(id, labels, gross, basic, deduct, net, overtime) {
             return new Chart(document.getElementById(id), {
                 type: 'line',
                 data: {
                     labels,
                     datasets: [
-                        { label: '総支給額', data: gross,    yAxisID: 'y',  borderColor: 'rgb(13,110,253)',  tension: 0.3, fill: false },
-                        { label: '基本給',   data: basic,    yAxisID: 'y',  borderColor: 'rgb(255,193,7)',   tension: 0.3, fill: false },
-                        { label: '控除合計', data: deduct,   yAxisID: 'y',  borderColor: 'rgb(220,53,69)',   tension: 0.3, fill: false },
-                        { label: '手取り額', data: net,      yAxisID: 'y',  borderColor: 'rgb(25,135,84)',   tension: 0.3, fill: false },
-                        { label: '残業時間', data: overtime, yAxisID: 'y2', borderColor: 'rgb(108,117,125)', tension: 0.3, fill: false, borderDash: [5, 5] },
+                        { label:'総支給額', data:gross,    yAxisID:'y',  borderColor:C('gross'),  tension:0.3, fill:false, borderWidth:2 },
+                        { label:'基本給',   data:basic,    yAxisID:'y',  borderColor:C('basic'),  tension:0.3, fill:false, borderWidth:2 },
+                        { label:'控除合計', data:deduct,   yAxisID:'y',  borderColor:C('deduct'), tension:0.3, fill:false, borderWidth:2 },
+                        { label:'手取り額', data:net,      yAxisID:'y',  borderColor:C('net'),    tension:0.3, fill:false, borderWidth:2 },
+                        { label:'残業時間', data:overtime, yAxisID:'y2', borderColor:C('ot'),     tension:0.3, fill:false, borderWidth:1.5, borderDash:[5,5] },
                     ]
                 },
                 options: {
-                    responsive: true,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y:  { position: 'left',  ticks: { callback: v => v.toLocaleString() + ' 円' } },
-                        y2: { position: 'right', ticks: { callback: v => v + ' h' }, grid: { drawOnChartArea: false } }
+                    responsive:true,
+                    plugins:{ legend:{ display:false } },
+                    scales:{
+                        y:{  position:'left',  ticks:{ color:C('tick'), callback:v=>v.toLocaleString()+'円' }, grid:{ color:C('grid') } },
+                        y2:{ position:'right', ticks:{ color:C('tick'), callback:v=>v+'h' }, grid:{ drawOnChartArea:false } }
                     }
                 }
             });
         }
 
-        // 賞与・源泉徴収票用（右軸なし）
         function makeChart(id, labels, gross, basic, deduct, net) {
             return new Chart(document.getElementById(id), {
-                type: 'line',
-                data: {
+                type:'line',
+                data:{
                     labels,
-                    datasets: [
-                        { label: '総支給額', data: gross, borderColor: 'rgb(13,110,253)',  tension: 0.3, fill: false },
-                        { label: '基本給',   data: basic, borderColor: 'rgb(255,193,7)',   tension: 0.3, fill: false },
-                        { label: '控除合計', data: deduct, borderColor: 'rgb(220,53,69)',  tension: 0.3, fill: false },
-                        { label: '手取り額', data: net,    borderColor: 'rgb(25,135,84)',  tension: 0.3, fill: false },
+                    datasets:[
+                        { label:'総支給額', data:gross,  borderColor:C('gross'),  tension:0.3, fill:false, borderWidth:2 },
+                        { label:'基本給',   data:basic,  borderColor:C('basic'),  tension:0.3, fill:false, borderWidth:2 },
+                        { label:'控除合計', data:deduct, borderColor:C('deduct'), tension:0.3, fill:false, borderWidth:2 },
+                        { label:'手取り額', data:net,    borderColor:C('net'),    tension:0.3, fill:false, borderWidth:2 },
                     ]
                 },
-                options: {
-                    responsive: true,
-                    plugins: { legend: { display: false } },
-                    scales: { y: { ticks: { callback: v => v.toLocaleString() + ' 円' } } }
+                options:{
+                    responsive:true,
+                    plugins:{ legend:{ display:false } },
+                    scales:{ y:{ ticks:{ color:C('tick'), callback:v=>v.toLocaleString()+'円' }, grid:{ color:C('grid') } } }
                 }
             });
         }
@@ -409,11 +396,25 @@
             chart.update();
         }
 
+        function applyChartTheme(chart, isMultiAxis) {
+            const tk = themeKey();
+            const cc = CHART_COLORS[tk];
+            const keys = ['gross','basic','deduct','net'];
+            chart.data.datasets.forEach((ds, i) => {
+                if (i < keys.length) ds.borderColor = cc[keys[i]];
+                else ds.borderColor = cc.ot;
+            });
+            chart.options.scales.y.ticks.color = cc.tick;
+            chart.options.scales.y.grid.color  = cc.grid;
+            if (chart.options.scales.y2) chart.options.scales.y2.ticks.color = cc.tick;
+            chart.update();
+        }
+
         @if (Model.SalarySlips.Count > 0)
         {
             var salaryJson = System.Text.Json.JsonSerializer.Serialize(Model.SalarySlips.Select(s => new {
-                month = s.PayrollMonth,
-                year  = s.PayrollMonth[..4],
+                month    = s.PayrollMonth,
+                year     = s.PayrollMonth[..4],
                 gross    = s.GrossAmount,
                 basic    = s.BasicAmount,
                 deduct   = s.DeductionAmount,
@@ -457,7 +458,7 @@
         function filterSalary(year) {
             const f = year === 'all' ? allSalarySlips : allSalarySlips.filter(s => s.year === year);
             salaryChart.data.labels = f.map(s => s.month);
-            const keys = ['gross', 'basic', 'deduct', 'net', 'overtime'];
+            const keys = ['gross','basic','deduct','net','overtime'];
             keys.forEach((k, i) => salaryChart.data.datasets[i].data = f.map(s => s[k]));
             salaryChart.update();
             document.querySelectorAll('#salary-table tr[data-year]').forEach(row => {
@@ -519,14 +520,44 @@
             </text>
         }
 
-        // 年フィルタを保持したまま詳細ページへ遷移
+        // ── タブ pill の active 同期 ──
+        document.querySelectorAll('#mainTabs .pr-tab').forEach(el => {
+            el.addEventListener('shown.bs.tab', () => {
+                document.querySelectorAll('#mainTabs .pr-tab').forEach(t => t.classList.remove('active'));
+                el.classList.add('active');
+            });
+        });
+
+        // ── テーマトグル ──
+        function applyTheme(dark) {
+            document.documentElement.classList.toggle('dark', dark);
+            document.getElementById('seg-light').classList.toggle('pr-seg--on', !dark);
+            document.getElementById('seg-dark').classList.toggle('pr-seg--on', dark);
+            @if (Model.SalarySlips.Count > 0) { <text>applyChartTheme(salaryChart, true);</text> }
+            @if (Model.BonusSlips.Count > 0)  { <text>applyChartTheme(bonusChart, false);</text> }
+            @if (Model.AnnualIncomeSlips.Count > 0) { <text>applyChartTheme(annualChart, false);</text> }
+        }
+
+        function toggleTheme() {
+            const isDark = !document.documentElement.classList.contains('dark');
+            localStorage.setItem('pr-theme', isDark ? 'dark' : 'light');
+            applyTheme(isDark);
+        }
+
+        // ── 起動時: localStorage からテーマ復元 ──
+        (function() {
+            const saved = localStorage.getItem('pr-theme');
+            if (saved === 'dark') applyTheme(true);
+        })();
+
+        // ── 年フィルタを保持したまま詳細ページへ遷移 ──
         function goToSlip(id, type) {
             const btn = document.querySelector(`.${type}-year-btn.active`);
             const year = btn ? btn.dataset.year : 'all';
             location.href = `/slip/${id}?tab=${type}&year=${year}`;
         }
 
-        // 詳細ページから戻ったときにタブ・年フィルタを復元
+        // ── 詳細ページから戻ったときにタブ・年フィルタを復元 ──
         (function restoreFromUrl() {
             const params = new URLSearchParams(window.location.search);
             const tab  = params.get('tab');
@@ -540,8 +571,6 @@
             } else if (tab === 'salary') {
                 @if (Model.SalarySlips.Count > 0) { <text>filterSalary(year);</text> }
             }
-
-            // URLをクリーンにする（ブラウザ履歴は変えない）
             history.replaceState(null, '', location.pathname);
         })();
     </script>
