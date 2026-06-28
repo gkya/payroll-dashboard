@@ -165,20 +165,28 @@
                                         <th class="text-end">基本給</th>
                                         <th class="text-end">残業時間</th>
                                         <th class="text-end">控除合計</th>
+                                        <th class="text-end">控除率</th>
                                         <th class="text-end">手取り額</th>
+                                        <th class="text-end">手取り率</th>
                                         <th>Status</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach (var slip in Model.SalarySlips)
                                     {
+                                        var deductRate = (slip.GrossAmount is > 0 && slip.DeductionAmount.HasValue)
+                                            ? slip.DeductionAmount!.Value / slip.GrossAmount!.Value * 100 : (decimal?)null;
+                                        var netRate = (slip.GrossAmount is > 0 && slip.NetAmount.HasValue)
+                                            ? slip.NetAmount!.Value / slip.GrossAmount!.Value * 100 : (decimal?)null;
                                         <tr data-year="@slip.PayrollMonth[..4]">
                                             <td>@slip.PayrollMonth</td>
                                             <td class="text-end">@(slip.GrossAmount?.ToString("N0") ?? "-")</td>
                                             <td class="text-end">@(slip.BasicAmount?.ToString("N0") ?? "-")</td>
                                             <td class="text-end">@(slip.OvertimeHours?.ToString("F2") ?? "-")</td>
                                             <td class="text-end">@(slip.DeductionAmount?.ToString("N0") ?? "-")</td>
+                                            <td class="text-end">@(deductRate?.ToString("F1") + "%" ?? "-")</td>
                                             <td class="text-end">@(slip.NetAmount?.ToString("N0") ?? "-")</td>
+                                            <td class="text-end">@(netRate?.ToString("F1") + "%" ?? "-")</td>
                                             <td><span class="badge @(slip.ImportStatus == PayrollImportStatus.Parsed ? "bg-success" : "bg-warning")">@slip.ImportStatus</span></td>
                                         </tr>
                                     }
@@ -190,7 +198,9 @@
                                         <td class="text-end" id="salary-avg-basic"></td>
                                         <td class="text-end" id="salary-avg-overtime"></td>
                                         <td class="text-end" id="salary-avg-deduct"></td>
+                                        <td class="text-end" id="salary-avg-deduct-rate"></td>
                                         <td class="text-end" id="salary-avg-net"></td>
+                                        <td class="text-end" id="salary-avg-net-rate"></td>
                                         <td></td>
                                     </tr>
                                 </tfoot>
@@ -427,14 +437,21 @@
                 const vals = slips.map(s => s[key]).filter(v => v != null);
                 return vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
             };
-            const fmtInt  = v => v != null ? Math.round(v).toLocaleString('ja-JP') : '-';
-            const fmtDec  = v => v != null ? v.toFixed(2) : '-';
-            document.getElementById('salary-avg-label').textContent   = `平均（${slips.length} 件）`;
-            document.getElementById('salary-avg-gross').textContent   = fmtInt(avg('gross'));
-            document.getElementById('salary-avg-basic').textContent   = fmtInt(avg('basic'));
-            document.getElementById('salary-avg-overtime').textContent = fmtDec(avg('overtime'));
-            document.getElementById('salary-avg-deduct').textContent  = fmtInt(avg('deduct'));
-            document.getElementById('salary-avg-net').textContent     = fmtInt(avg('net'));
+            const rate   = (a, b) => (a != null && b != null && b > 0) ? a / b * 100 : null;
+            const fmtInt = v => v != null ? Math.round(v).toLocaleString('ja-JP') : '-';
+            const fmtDec = v => v != null ? v.toFixed(2) : '-';
+            const fmtPct = v => v != null ? v.toFixed(1) + '%' : '-';
+            const avgGross  = avg('gross');
+            const avgDeduct = avg('deduct');
+            const avgNet    = avg('net');
+            document.getElementById('salary-avg-label').textContent       = `平均（${slips.length} 件）`;
+            document.getElementById('salary-avg-gross').textContent       = fmtInt(avgGross);
+            document.getElementById('salary-avg-basic').textContent       = fmtInt(avg('basic'));
+            document.getElementById('salary-avg-overtime').textContent    = fmtDec(avg('overtime'));
+            document.getElementById('salary-avg-deduct').textContent      = fmtInt(avgDeduct);
+            document.getElementById('salary-avg-deduct-rate').textContent = fmtPct(rate(avgDeduct, avgGross));
+            document.getElementById('salary-avg-net').textContent         = fmtInt(avgNet);
+            document.getElementById('salary-avg-net-rate').textContent    = fmtPct(rate(avgNet, avgGross));
         }
 
         function filterSalary(year) {
