@@ -34,9 +34,10 @@ public class AnnualIncomeIngestionService
         var results = new List<AnnualIncomeSlip>();
         foreach (var filePath in Directory.GetFiles(directory, "*.pdf"))
         {
-            var fileName = Path.GetFileName(filePath);
-            if (_repository.ExistsByFileName(fileName)) continue;
+            var hash = PayrollIngestionService.ComputeFileHash(filePath);
+            if (_repository.ExistsByHash(hash)) continue;
 
+            var fileName = Path.GetFileName(filePath);
             var year = ExtractYearFromFileName(fileName);
             var parseResult = _parser.Parse(filePath);
 
@@ -45,6 +46,7 @@ public class AnnualIncomeIngestionService
                 FiscalYear = year,
                 SourceFileName = fileName,
                 SourceFilePath = filePath,
+                SourceFileHash = hash,
                 ImportStatus = parseResult.Success ? PayrollImportStatus.Parsed : PayrollImportStatus.ParseFailed,
                 TotalIncome = parseResult.TotalIncome,
                 AfterDeduction = parseResult.AfterDeduction,

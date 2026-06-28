@@ -6,6 +6,7 @@ public class AnnualIncomeSlip
     public string FiscalYear { get; set; } = string.Empty;
     public string SourceFileName { get; set; } = string.Empty;
     public string SourceFilePath { get; set; } = string.Empty;
+    public string SourceFileHash { get; set; } = string.Empty;
     public PayrollImportStatus ImportStatus { get; set; } = PayrollImportStatus.Imported;
     public decimal? TotalIncome { get; set; }       // 支払金額
     public decimal? AfterDeduction { get; set; }    // 給与所得控除後の金額

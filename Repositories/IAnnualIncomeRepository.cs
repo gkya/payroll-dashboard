@@ -6,5 +6,5 @@ public interface IAnnualIncomeRepository
 {
     void Save(AnnualIncomeSlip slip);
     IEnumerable<AnnualIncomeSlip> GetAll();
-    bool ExistsByFileName(string fileName);
+    bool ExistsByHash(string hash);
 }

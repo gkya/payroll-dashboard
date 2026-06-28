@@ -12,6 +12,8 @@ public class PayrollSlip
 
     public string SourceFilePath { get; set; } = string.Empty;
 
+    public string SourceFileHash { get; set; } = string.Empty;
+
     public PayrollImportStatus ImportStatus { get; set; } = PayrollImportStatus.Imported;
 
     public decimal? GrossAmount { get; set; }

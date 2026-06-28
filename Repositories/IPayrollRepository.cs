@@ -10,5 +10,5 @@ public interface IPayrollRepository
 
     PayrollSlip? GetById(int id);
 
-    bool ExistsByFileName(string fileName);
+    bool ExistsByHash(string hash);
 }

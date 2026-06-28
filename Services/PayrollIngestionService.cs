@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using PayrollDashboard.Models;
 using PayrollDashboard.Repositories;
@@ -27,22 +28,30 @@ public class PayrollIngestionService
     return $"{year}-{month}";
   }
 
+  public static string ComputeFileHash(string filePath)
+  {
+    using var stream = File.OpenRead(filePath);
+    var bytes = SHA256.HashData(stream);
+    return Convert.ToHexString(bytes).ToLowerInvariant();
+  }
+
   public IReadOnlyList<PayrollSlip> ImportAllFromDirectory(string directory, PayrollSlipType slipType)
   {
     var results = new List<PayrollSlip>();
     foreach (var filePath in Directory.GetFiles(directory, "*.pdf"))
     {
-      var fileName = Path.GetFileName(filePath);
-      if (_repository.ExistsByFileName(fileName)) continue;
+      var hash = ComputeFileHash(filePath);
+      if (_repository.ExistsByHash(hash)) continue;
 
+      var fileName = Path.GetFileName(filePath);
       var month = ExtractMonthFromFileName(fileName) ?? string.Empty;
-      var slip = ImportFromPath(filePath, fileName, month, slipType);
+      var slip = ImportFromPath(filePath, fileName, month, slipType, hash);
       results.Add(slip);
     }
     return results;
   }
 
-  private PayrollSlip ImportFromPath(string filePath, string fileName, string payrollMonth, PayrollSlipType slipType)
+  private PayrollSlip ImportFromPath(string filePath, string fileName, string payrollMonth, PayrollSlipType slipType, string hash)
   {
     var parseResult = _parser.Parse(filePath);
 
@@ -52,6 +61,7 @@ public class PayrollIngestionService
       PayrollMonth = payrollMonth,
       SourceFileName = fileName,
       SourceFilePath = filePath,
+      SourceFileHash = hash,
       ImportStatus = parseResult.Success ? PayrollImportStatus.Parsed : PayrollImportStatus.ParseFailed,
       GrossAmount = parseResult.GrossAmount,
       DeductionAmount = parseResult.DeductionAmount,
@@ -69,6 +79,7 @@ public class PayrollIngestionService
   public PayrollSlip Import(IFormFile file, string payrollMonth)
   {
     var filePath = _fileStorage.SaveFile(file);
+    var hash = ComputeFileHash(filePath);
     var parseResult = _parser.Parse(filePath);
 
     var slip = new PayrollSlip
@@ -76,6 +87,7 @@ public class PayrollIngestionService
       PayrollMonth = payrollMonth,
       SourceFileName = file.FileName,
       SourceFilePath = filePath,
+      SourceFileHash = hash,
       ImportStatus = parseResult.Success ? PayrollImportStatus.Parsed : PayrollImportStatus.ParseFailed,
       GrossAmount = parseResult.GrossAmount,
       DeductionAmount = parseResult.DeductionAmount,
@@ -87,7 +99,6 @@ public class PayrollIngestionService
     };
 
     _repository.Save(slip);
-
     return slip;
   }
 }

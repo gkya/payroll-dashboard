@@ -22,14 +22,15 @@ public class SqlitePayrollRepository : IPayrollRepository
 
         var command = connection.CreateCommand();
         command.CommandText = """
-            INSERT INTO PayrollSlips (SlipType, PayrollMonth, SourceFileName, SourceFilePath, ImportStatus, GrossAmount, DeductionAmount, NetAmount, BasicAmount, OvertimeHours, ParseMessage, ImportedAt)
-            VALUES ($slipType, $month, $fileName, $filePath, $status, $gross, $deduction, $net, $basic, $overtimeHours, $message, $importedAt)
+            INSERT INTO PayrollSlips (SlipType, PayrollMonth, SourceFileName, SourceFilePath, SourceFileHash, ImportStatus, GrossAmount, DeductionAmount, NetAmount, BasicAmount, OvertimeHours, ParseMessage, ImportedAt)
+            VALUES ($slipType, $month, $fileName, $filePath, $hash, $status, $gross, $deduction, $net, $basic, $overtimeHours, $message, $importedAt)
             """;
 
         command.Parameters.AddWithValue("$slipType", slip.SlipType.ToString());
         command.Parameters.AddWithValue("$month", slip.PayrollMonth);
         command.Parameters.AddWithValue("$fileName", slip.SourceFileName);
         command.Parameters.AddWithValue("$filePath", slip.SourceFilePath);
+        command.Parameters.AddWithValue("$hash", slip.SourceFileHash);
         command.Parameters.AddWithValue("$status", slip.ImportStatus.ToString());
         command.Parameters.AddWithValue("$gross", slip.GrossAmount.HasValue ? (object)slip.GrossAmount.Value : DBNull.Value);
         command.Parameters.AddWithValue("$deduction", slip.DeductionAmount.HasValue ? (object)slip.DeductionAmount.Value : DBNull.Value);
@@ -49,7 +50,7 @@ public class SqlitePayrollRepository : IPayrollRepository
 
         var command = connection.CreateCommand();
         command.CommandText = """
-            SELECT Id, SlipType, PayrollMonth, SourceFileName, SourceFilePath, ImportStatus, GrossAmount, DeductionAmount, NetAmount, BasicAmount, OvertimeHours, ParseMessage, ImportedAt
+            SELECT Id, SlipType, PayrollMonth, SourceFileName, SourceFilePath, SourceFileHash, ImportStatus, GrossAmount, DeductionAmount, NetAmount, BasicAmount, OvertimeHours, ParseMessage, ImportedAt
             FROM PayrollSlips
             ORDER BY PayrollMonth ASC
             """;
@@ -65,14 +66,15 @@ public class SqlitePayrollRepository : IPayrollRepository
                 PayrollMonth = reader.GetString(2),
                 SourceFileName = reader.GetString(3),
                 SourceFilePath = reader.GetString(4),
-                ImportStatus = Enum.Parse<PayrollImportStatus>(reader.GetString(5)),
-                GrossAmount = reader.IsDBNull(6) ? null : reader.GetDecimal(6),
-                DeductionAmount = reader.IsDBNull(7) ? null : reader.GetDecimal(7),
-                NetAmount = reader.IsDBNull(8) ? null : reader.GetDecimal(8),
-                BasicAmount = reader.IsDBNull(9) ? null : reader.GetDecimal(9),
-                OvertimeHours = reader.IsDBNull(10) ? null : reader.GetDecimal(10),
-                ParseMessage = reader.IsDBNull(11) ? null : reader.GetString(11),
-                ImportedAt = DateTimeOffset.Parse(reader.GetString(12)),
+                SourceFileHash = reader.GetString(5),
+                ImportStatus = Enum.Parse<PayrollImportStatus>(reader.GetString(6)),
+                GrossAmount = reader.IsDBNull(7) ? null : reader.GetDecimal(7),
+                DeductionAmount = reader.IsDBNull(8) ? null : reader.GetDecimal(8),
+                NetAmount = reader.IsDBNull(9) ? null : reader.GetDecimal(9),
+                BasicAmount = reader.IsDBNull(10) ? null : reader.GetDecimal(10),
+                OvertimeHours = reader.IsDBNull(11) ? null : reader.GetDecimal(11),
+                ParseMessage = reader.IsDBNull(12) ? null : reader.GetString(12),
+                ImportedAt = DateTimeOffset.Parse(reader.GetString(13)),
             });
         }
 
@@ -86,7 +88,7 @@ public class SqlitePayrollRepository : IPayrollRepository
 
         var command = connection.CreateCommand();
         command.CommandText = """
-            SELECT Id, SlipType, PayrollMonth, SourceFileName, SourceFilePath, ImportStatus, GrossAmount, DeductionAmount, NetAmount, BasicAmount, OvertimeHours, ParseMessage, ImportedAt
+            SELECT Id, SlipType, PayrollMonth, SourceFileName, SourceFilePath, SourceFileHash, ImportStatus, GrossAmount, DeductionAmount, NetAmount, BasicAmount, OvertimeHours, ParseMessage, ImportedAt
             FROM PayrollSlips
             WHERE Id = $id
             """;
@@ -102,25 +104,26 @@ public class SqlitePayrollRepository : IPayrollRepository
             PayrollMonth = reader.GetString(2),
             SourceFileName = reader.GetString(3),
             SourceFilePath = reader.GetString(4),
-            ImportStatus = Enum.Parse<PayrollImportStatus>(reader.GetString(5)),
-            GrossAmount = reader.IsDBNull(6) ? null : reader.GetDecimal(6),
-            DeductionAmount = reader.IsDBNull(7) ? null : reader.GetDecimal(7),
-            NetAmount = reader.IsDBNull(8) ? null : reader.GetDecimal(8),
-            BasicAmount = reader.IsDBNull(9) ? null : reader.GetDecimal(9),
-            OvertimeHours = reader.IsDBNull(10) ? null : reader.GetDecimal(10),
-            ParseMessage = reader.IsDBNull(11) ? null : reader.GetString(11),
-            ImportedAt = DateTimeOffset.Parse(reader.GetString(12)),
+            SourceFileHash = reader.GetString(5),
+            ImportStatus = Enum.Parse<PayrollImportStatus>(reader.GetString(6)),
+            GrossAmount = reader.IsDBNull(7) ? null : reader.GetDecimal(7),
+            DeductionAmount = reader.IsDBNull(8) ? null : reader.GetDecimal(8),
+            NetAmount = reader.IsDBNull(9) ? null : reader.GetDecimal(9),
+            BasicAmount = reader.IsDBNull(10) ? null : reader.GetDecimal(10),
+            OvertimeHours = reader.IsDBNull(11) ? null : reader.GetDecimal(11),
+            ParseMessage = reader.IsDBNull(12) ? null : reader.GetString(12),
+            ImportedAt = DateTimeOffset.Parse(reader.GetString(13)),
         };
     }
 
-    public bool ExistsByFileName(string fileName)
+    public bool ExistsByHash(string hash)
     {
         using var connection = new SqliteConnection(_connectionString);
         connection.Open();
 
         var command = connection.CreateCommand();
-        command.CommandText = "SELECT COUNT(1) FROM PayrollSlips WHERE SourceFileName = $fileName";
-        command.Parameters.AddWithValue("$fileName", fileName);
+        command.CommandText = "SELECT COUNT(1) FROM PayrollSlips WHERE SourceFileHash = $hash";
+        command.Parameters.AddWithValue("$hash", hash);
 
         return Convert.ToInt32(command.ExecuteScalar()) > 0;
     }
@@ -138,6 +141,7 @@ public class SqlitePayrollRepository : IPayrollRepository
                 PayrollMonth    TEXT    NOT NULL,
                 SourceFileName  TEXT    NOT NULL,
                 SourceFilePath  TEXT    NOT NULL,
+                SourceFileHash  TEXT    NOT NULL DEFAULT '',
                 ImportStatus    TEXT    NOT NULL,
                 GrossAmount     REAL,
                 DeductionAmount REAL,

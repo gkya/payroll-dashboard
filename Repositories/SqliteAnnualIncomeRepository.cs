@@ -20,13 +20,14 @@ public class SqliteAnnualIncomeRepository : IAnnualIncomeRepository
 
         var command = connection.CreateCommand();
         command.CommandText = """
-            INSERT INTO AnnualIncomeSlips (FiscalYear, SourceFileName, SourceFilePath, ImportStatus, TotalIncome, AfterDeduction, TotalDeductions, WithholdingTax, ParseMessage, ImportedAt)
-            VALUES ($year, $fileName, $filePath, $status, $totalIncome, $afterDeduction, $totalDeductions, $withholdingTax, $message, $importedAt)
+            INSERT INTO AnnualIncomeSlips (FiscalYear, SourceFileName, SourceFilePath, SourceFileHash, ImportStatus, TotalIncome, AfterDeduction, TotalDeductions, WithholdingTax, ParseMessage, ImportedAt)
+            VALUES ($year, $fileName, $filePath, $hash, $status, $totalIncome, $afterDeduction, $totalDeductions, $withholdingTax, $message, $importedAt)
             """;
 
         command.Parameters.AddWithValue("$year", slip.FiscalYear);
         command.Parameters.AddWithValue("$fileName", slip.SourceFileName);
         command.Parameters.AddWithValue("$filePath", slip.SourceFilePath);
+        command.Parameters.AddWithValue("$hash", slip.SourceFileHash);
         command.Parameters.AddWithValue("$status", slip.ImportStatus.ToString());
         command.Parameters.AddWithValue("$totalIncome", slip.TotalIncome.HasValue ? (object)slip.TotalIncome.Value : DBNull.Value);
         command.Parameters.AddWithValue("$afterDeduction", slip.AfterDeduction.HasValue ? (object)slip.AfterDeduction.Value : DBNull.Value);
@@ -45,7 +46,7 @@ public class SqliteAnnualIncomeRepository : IAnnualIncomeRepository
 
         var command = connection.CreateCommand();
         command.CommandText = """
-            SELECT Id, FiscalYear, SourceFileName, SourceFilePath, ImportStatus, TotalIncome, AfterDeduction, TotalDeductions, WithholdingTax, ParseMessage, ImportedAt
+            SELECT Id, FiscalYear, SourceFileName, SourceFilePath, SourceFileHash, ImportStatus, TotalIncome, AfterDeduction, TotalDeductions, WithholdingTax, ParseMessage, ImportedAt
             FROM AnnualIncomeSlips
             ORDER BY FiscalYear ASC
             """;
@@ -60,27 +61,28 @@ public class SqliteAnnualIncomeRepository : IAnnualIncomeRepository
                 FiscalYear = reader.GetString(1),
                 SourceFileName = reader.GetString(2),
                 SourceFilePath = reader.GetString(3),
-                ImportStatus = Enum.Parse<PayrollImportStatus>(reader.GetString(4)),
-                TotalIncome = reader.IsDBNull(5) ? null : reader.GetDecimal(5),
-                AfterDeduction = reader.IsDBNull(6) ? null : reader.GetDecimal(6),
-                TotalDeductions = reader.IsDBNull(7) ? null : reader.GetDecimal(7),
-                WithholdingTax = reader.IsDBNull(8) ? null : reader.GetDecimal(8),
-                ParseMessage = reader.IsDBNull(9) ? null : reader.GetString(9),
-                ImportedAt = DateTimeOffset.Parse(reader.GetString(10)),
+                SourceFileHash = reader.GetString(4),
+                ImportStatus = Enum.Parse<PayrollImportStatus>(reader.GetString(5)),
+                TotalIncome = reader.IsDBNull(6) ? null : reader.GetDecimal(6),
+                AfterDeduction = reader.IsDBNull(7) ? null : reader.GetDecimal(7),
+                TotalDeductions = reader.IsDBNull(8) ? null : reader.GetDecimal(8),
+                WithholdingTax = reader.IsDBNull(9) ? null : reader.GetDecimal(9),
+                ParseMessage = reader.IsDBNull(10) ? null : reader.GetString(10),
+                ImportedAt = DateTimeOffset.Parse(reader.GetString(11)),
             });
         }
 
         return slips;
     }
 
-    public bool ExistsByFileName(string fileName)
+    public bool ExistsByHash(string hash)
     {
         using var connection = new SqliteConnection(_connectionString);
         connection.Open();
 
         var command = connection.CreateCommand();
-        command.CommandText = "SELECT COUNT(1) FROM AnnualIncomeSlips WHERE SourceFileName = $fileName";
-        command.Parameters.AddWithValue("$fileName", fileName);
+        command.CommandText = "SELECT COUNT(1) FROM AnnualIncomeSlips WHERE SourceFileHash = $hash";
+        command.Parameters.AddWithValue("$hash", hash);
 
         return Convert.ToInt32(command.ExecuteScalar()) > 0;
     }
@@ -97,6 +99,7 @@ public class SqliteAnnualIncomeRepository : IAnnualIncomeRepository
                 FiscalYear      TEXT    NOT NULL,
                 SourceFileName  TEXT    NOT NULL,
                 SourceFilePath  TEXT    NOT NULL,
+                SourceFileHash  TEXT    NOT NULL DEFAULT '',
                 ImportStatus    TEXT    NOT NULL,
                 TotalIncome     REAL,
                 AfterDeduction  REAL,
