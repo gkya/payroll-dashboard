@@ -38,4 +38,15 @@ public class PayrollController : ControllerBase
 
         return Ok(slip);
     }
+
+    [HttpGet("slips/{id}/pdf")]
+    public IActionResult GetSlipPdf([FromRoute] int id)
+    {
+        var slip = _repository.GetById(id);
+        if (slip == null) return NotFound();
+        if (!System.IO.File.Exists(slip.SourceFilePath)) return NotFound("PDF file not found on disk");
+
+        var bytes = System.IO.File.ReadAllBytes(slip.SourceFilePath);
+        return File(bytes, "application/pdf", enableRangeProcessing: true);
+    }
 }
