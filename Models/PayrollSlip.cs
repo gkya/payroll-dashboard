@@ -22,6 +22,8 @@ public class PayrollSlip
 
     public decimal? BasicAmount { get; set; }
 
+    public decimal? OvertimeHours { get; set; }
+
     public string? ParseMessage { get; set; }
 
     public DateTimeOffset ImportedAt { get; set; }

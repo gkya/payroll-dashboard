@@ -57,6 +57,7 @@ public class PayrollIngestionService
       DeductionAmount = parseResult.DeductionAmount,
       NetAmount = parseResult.NetAmount,
       BasicAmount = parseResult.BasicAmount,
+      OvertimeHours = parseResult.OvertimeHours,
       ParseMessage = parseResult.Message,
       ImportedAt = DateTimeOffset.UtcNow
     };
@@ -80,6 +81,7 @@ public class PayrollIngestionService
       DeductionAmount = parseResult.DeductionAmount,
       NetAmount = parseResult.NetAmount,
       BasicAmount = parseResult.BasicAmount,
+      OvertimeHours = parseResult.OvertimeHours,
       ParseMessage = parseResult.Message,
       ImportedAt = DateTimeOffset.UtcNow
     };

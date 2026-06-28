@@ -85,6 +85,7 @@
                                         <th>支給月</th>
                                         <th class="text-end">総支給額</th>
                                         <th class="text-end">基本給</th>
+                                        <th class="text-end">残業時間</th>
                                         <th class="text-end">控除合計</th>
                                         <th class="text-end">手取り額</th>
                                         <th>Status</th>
@@ -97,6 +98,7 @@
                                             <td>@slip.PayrollMonth</td>
                                             <td class="text-end">@(slip.GrossAmount?.ToString("N0") ?? "-")</td>
                                             <td class="text-end">@(slip.BasicAmount?.ToString("N0") ?? "-")</td>
+                                            <td class="text-end">@(slip.OvertimeHours?.ToString("F2") ?? "-")</td>
                                             <td class="text-end">@(slip.DeductionAmount?.ToString("N0") ?? "-")</td>
                                             <td class="text-end">@(slip.NetAmount?.ToString("N0") ?? "-")</td>
                                             <td><span class="badge @(slip.ImportStatus == PayrollImportStatus.Parsed ? "bg-success" : "bg-warning")">@slip.ImportStatus</span></td>

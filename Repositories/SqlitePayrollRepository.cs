@@ -22,8 +22,8 @@ public class SqlitePayrollRepository : IPayrollRepository
 
         var command = connection.CreateCommand();
         command.CommandText = """
-            INSERT INTO PayrollSlips (SlipType, PayrollMonth, SourceFileName, SourceFilePath, ImportStatus, GrossAmount, DeductionAmount, NetAmount, BasicAmount, ParseMessage, ImportedAt)
-            VALUES ($slipType, $month, $fileName, $filePath, $status, $gross, $deduction, $net, $basic, $message, $importedAt)
+            INSERT INTO PayrollSlips (SlipType, PayrollMonth, SourceFileName, SourceFilePath, ImportStatus, GrossAmount, DeductionAmount, NetAmount, BasicAmount, OvertimeHours, ParseMessage, ImportedAt)
+            VALUES ($slipType, $month, $fileName, $filePath, $status, $gross, $deduction, $net, $basic, $overtimeHours, $message, $importedAt)
             """;
 
         command.Parameters.AddWithValue("$slipType", slip.SlipType.ToString());
@@ -35,6 +35,7 @@ public class SqlitePayrollRepository : IPayrollRepository
         command.Parameters.AddWithValue("$deduction", slip.DeductionAmount.HasValue ? (object)slip.DeductionAmount.Value : DBNull.Value);
         command.Parameters.AddWithValue("$net", slip.NetAmount.HasValue ? (object)slip.NetAmount.Value : DBNull.Value);
         command.Parameters.AddWithValue("$basic", slip.BasicAmount.HasValue ? (object)slip.BasicAmount.Value : DBNull.Value);
+        command.Parameters.AddWithValue("$overtimeHours", slip.OvertimeHours.HasValue ? (object)slip.OvertimeHours.Value : DBNull.Value);
         command.Parameters.AddWithValue("$message", slip.ParseMessage ?? (object)DBNull.Value);
         command.Parameters.AddWithValue("$importedAt", slip.ImportedAt.ToString("O"));
 
@@ -48,7 +49,7 @@ public class SqlitePayrollRepository : IPayrollRepository
 
         var command = connection.CreateCommand();
         command.CommandText = """
-            SELECT Id, SlipType, PayrollMonth, SourceFileName, SourceFilePath, ImportStatus, GrossAmount, DeductionAmount, NetAmount, BasicAmount, ParseMessage, ImportedAt
+            SELECT Id, SlipType, PayrollMonth, SourceFileName, SourceFilePath, ImportStatus, GrossAmount, DeductionAmount, NetAmount, BasicAmount, OvertimeHours, ParseMessage, ImportedAt
             FROM PayrollSlips
             ORDER BY PayrollMonth ASC
             """;
@@ -69,8 +70,9 @@ public class SqlitePayrollRepository : IPayrollRepository
                 DeductionAmount = reader.IsDBNull(7) ? null : reader.GetDecimal(7),
                 NetAmount = reader.IsDBNull(8) ? null : reader.GetDecimal(8),
                 BasicAmount = reader.IsDBNull(9) ? null : reader.GetDecimal(9),
-                ParseMessage = reader.IsDBNull(10) ? null : reader.GetString(10),
-                ImportedAt = DateTimeOffset.Parse(reader.GetString(11)),
+                OvertimeHours = reader.IsDBNull(10) ? null : reader.GetDecimal(10),
+                ParseMessage = reader.IsDBNull(11) ? null : reader.GetString(11),
+                ImportedAt = DateTimeOffset.Parse(reader.GetString(12)),
             });
         }
 
@@ -84,7 +86,7 @@ public class SqlitePayrollRepository : IPayrollRepository
 
         var command = connection.CreateCommand();
         command.CommandText = """
-            SELECT Id, SlipType, PayrollMonth, SourceFileName, SourceFilePath, ImportStatus, GrossAmount, DeductionAmount, NetAmount, BasicAmount, ParseMessage, ImportedAt
+            SELECT Id, SlipType, PayrollMonth, SourceFileName, SourceFilePath, ImportStatus, GrossAmount, DeductionAmount, NetAmount, BasicAmount, OvertimeHours, ParseMessage, ImportedAt
             FROM PayrollSlips
             WHERE Id = $id
             """;
@@ -105,8 +107,9 @@ public class SqlitePayrollRepository : IPayrollRepository
             DeductionAmount = reader.IsDBNull(7) ? null : reader.GetDecimal(7),
             NetAmount = reader.IsDBNull(8) ? null : reader.GetDecimal(8),
             BasicAmount = reader.IsDBNull(9) ? null : reader.GetDecimal(9),
-            ParseMessage = reader.IsDBNull(10) ? null : reader.GetString(10),
-            ImportedAt = DateTimeOffset.Parse(reader.GetString(11)),
+            OvertimeHours = reader.IsDBNull(10) ? null : reader.GetDecimal(10),
+            ParseMessage = reader.IsDBNull(11) ? null : reader.GetString(11),
+            ImportedAt = DateTimeOffset.Parse(reader.GetString(12)),
         };
     }
 
@@ -140,6 +143,7 @@ public class SqlitePayrollRepository : IPayrollRepository
                 DeductionAmount REAL,
                 NetAmount       REAL,
                 BasicAmount     REAL,
+                OvertimeHours   REAL,
                 ParseMessage    TEXT,
                 ImportedAt      TEXT    NOT NULL
             )
