@@ -1,0 +1,89 @@
+@page "/slip/{id:int}"
+@model PayrollDashboard.Pages.SlipDetailModel
+@using PayrollDashboard.Models
+@{
+    ViewData["Title"] = "明細詳細";
+    var slip = Model.Slip!;
+    var isBonus = slip.SlipType == PayrollSlipType.Bonus;
+    var deductRate = (slip.GrossAmount is > 0 && slip.DeductionAmount.HasValue)
+        ? slip.DeductionAmount!.Value / slip.GrossAmount!.Value * 100 : (decimal?)null;
+    var netRate = (slip.GrossAmount is > 0 && slip.NetAmount.HasValue)
+        ? slip.NetAmount!.Value / slip.GrossAmount!.Value * 100 : (decimal?)null;
+}
+
+<div class="d-flex align-items-center mb-4">
+    <a href="/" class="btn btn-outline-secondary btn-sm me-3">← 戻る</a>
+    <h1 class="h4 mb-0">
+        <span class="badge @(isBonus ? "bg-warning text-dark" : "bg-primary") me-2">@(isBonus ? "賞与" : "給与")</span>
+        @slip.PayrollMonth 明細
+    </h1>
+    <span class="ms-3 badge @(slip.ImportStatus == PayrollImportStatus.Parsed ? "bg-success" : "bg-warning")">@slip.ImportStatus</span>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-primary text-white fw-semibold">支給情報</div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-6 text-muted">支給月</dt>
+                    <dd class="col-6 text-end">@slip.PayrollMonth</dd>
+
+                    <dt class="col-6 text-muted">総支給額</dt>
+                    <dd class="col-6 text-end fw-semibold">@(slip.GrossAmount?.ToString("N0") ?? "-") 円</dd>
+
+                    <dt class="col-6 text-muted">基本給</dt>
+                    <dd class="col-6 text-end">@(slip.BasicAmount?.ToString("N0") ?? "-") 円</dd>
+
+                    @if (!isBonus)
+                    {
+                        <dt class="col-6 text-muted">残業時間</dt>
+                        <dd class="col-6 text-end">@(slip.OvertimeHours?.ToString("F2") ?? "-") 時間</dd>
+                    }
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-danger text-white fw-semibold">控除・手取り情報</div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-6 text-muted">控除合計</dt>
+                    <dd class="col-6 text-end">@(slip.DeductionAmount?.ToString("N0") ?? "-") 円</dd>
+
+                    <dt class="col-6 text-muted">控除率</dt>
+                    <dd class="col-6 text-end">@(deductRate?.ToString("F1") + "%" ?? "-")</dd>
+
+                    <dt class="col-6 text-muted">手取り額</dt>
+                    <dd class="col-6 text-end fw-semibold text-success">@(slip.NetAmount?.ToString("N0") ?? "-") 円</dd>
+
+                    <dt class="col-6 text-muted">手取り率</dt>
+                    <dd class="col-6 text-end">@(netRate?.ToString("F1") + "%" ?? "-")</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-light fw-semibold">取込情報</div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-3 text-muted">ファイル名</dt>
+                    <dd class="col-sm-9 font-monospace">@slip.SourceFileName</dd>
+
+                    <dt class="col-sm-3 text-muted">取込日時</dt>
+                    <dd class="col-sm-9">@slip.ImportedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</dd>
+
+                    @if (!string.IsNullOrEmpty(slip.ParseMessage))
+                    {
+                        <dt class="col-sm-3 text-muted">メッセージ</dt>
+                        <dd class="col-sm-9 text-danger">@slip.ParseMessage</dd>
+                    }
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>

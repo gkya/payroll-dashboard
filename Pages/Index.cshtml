@@ -178,7 +178,7 @@
                                             ? slip.DeductionAmount!.Value / slip.GrossAmount!.Value * 100 : (decimal?)null;
                                         var netRate = (slip.GrossAmount is > 0 && slip.NetAmount.HasValue)
                                             ? slip.NetAmount!.Value / slip.GrossAmount!.Value * 100 : (decimal?)null;
-                                        <tr data-year="@slip.PayrollMonth[..4]">
+                                        <tr data-year="@slip.PayrollMonth[..4]" onclick="location.href='/slip/@slip.Id'" style="cursor:pointer">
                                             <td>@slip.PayrollMonth</td>
                                             <td class="text-end">@(slip.GrossAmount?.ToString("N0") ?? "-")</td>
                                             <td class="text-end">@(slip.BasicAmount?.ToString("N0") ?? "-")</td>
@@ -263,7 +263,7 @@
                                 <tbody>
                                     @foreach (var slip in Model.BonusSlips)
                                     {
-                                        <tr data-year="@slip.PayrollMonth[..4]">
+                                        <tr data-year="@slip.PayrollMonth[..4]" onclick="location.href='/slip/@slip.Id'" style="cursor:pointer">
                                             <td>@slip.PayrollMonth</td>
                                             <td class="text-end">@(slip.GrossAmount?.ToString("N0") ?? "-")</td>
                                             <td class="text-end">@(slip.DeductionAmount?.ToString("N0") ?? "-")</td>
