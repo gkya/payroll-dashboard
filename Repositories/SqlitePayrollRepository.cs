@@ -77,6 +77,39 @@ public class SqlitePayrollRepository : IPayrollRepository
         return slips;
     }
 
+    public PayrollSlip? GetById(int id)
+    {
+        using var connection = new SqliteConnection(_connectionString);
+        connection.Open();
+
+        var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT Id, SlipType, PayrollMonth, SourceFileName, SourceFilePath, ImportStatus, GrossAmount, DeductionAmount, NetAmount, BasicAmount, ParseMessage, ImportedAt
+            FROM PayrollSlips
+            WHERE Id = $id
+            """;
+        command.Parameters.AddWithValue("$id", id);
+
+        using var reader = command.ExecuteReader();
+        if (!reader.Read()) return null;
+
+        return new PayrollSlip
+        {
+            Id = reader.GetInt32(0),
+            SlipType = Enum.Parse<PayrollSlipType>(reader.GetString(1)),
+            PayrollMonth = reader.GetString(2),
+            SourceFileName = reader.GetString(3),
+            SourceFilePath = reader.GetString(4),
+            ImportStatus = Enum.Parse<PayrollImportStatus>(reader.GetString(5)),
+            GrossAmount = reader.IsDBNull(6) ? null : reader.GetDecimal(6),
+            DeductionAmount = reader.IsDBNull(7) ? null : reader.GetDecimal(7),
+            NetAmount = reader.IsDBNull(8) ? null : reader.GetDecimal(8),
+            BasicAmount = reader.IsDBNull(9) ? null : reader.GetDecimal(9),
+            ParseMessage = reader.IsDBNull(10) ? null : reader.GetString(10),
+            ImportedAt = DateTimeOffset.Parse(reader.GetString(11)),
+        };
+    }
+
     public bool ExistsByFileName(string fileName)
     {
         using var connection = new SqliteConnection(_connectionString);
