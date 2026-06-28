@@ -16,116 +16,167 @@
     var tabParam = string.IsNullOrEmpty(fromTab) ? "" : $"?tab={fromTab}&year={fromYear}";
 }
 
-<div class="d-flex align-items-center mb-4 gap-2">
-    <a href="@backUrl" class="btn btn-outline-secondary btn-sm">← 戻る</a>
+<div class="pr-shell">
 
-    @if (Model.PrevSlip != null)
-    {
-        <a href="/slip/@Model.PrevSlip.Id@tabParam" class="btn btn-outline-primary btn-sm">‹ @Model.PrevSlip.PayrollMonth</a>
-    }
-    else
-    {
-        <button class="btn btn-outline-primary btn-sm" disabled>‹ 前月</button>
-    }
+    @* ── Header ── *@
+    <div class="pr-header" style="align-items:center;">
+        <div>
+            <div class="pr-eyebrow">@slip.PayrollMonth</div>
+            <h1 class="pr-title" style="font-size:28px; margin-top:8px;">
+                @(isBonus ? "賞与" : "給与")支給明細書
+            </h1>
+            <div class="pr-subtitle">@slip.PayrollMonth 支給</div>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+            <span class="pr-badge @(slip.ImportStatus == PayrollImportStatus.Parsed ? "pr-badge--ok" : "pr-badge--err")"
+                  style="font-size:11px; padding:6px 10px;">@slip.ImportStatus</span>
 
-    <h1 class="h4 mb-0 mx-2">
-        <span class="badge @(isBonus ? "bg-warning text-dark" : "bg-primary") me-2">@(isBonus ? "賞与" : "給与")</span>
-        @slip.PayrollMonth 明細
-    </h1>
-    <span class="badge @(slip.ImportStatus == PayrollImportStatus.Parsed ? "bg-success" : "bg-warning")">@slip.ImportStatus</span>
+            <div style="display:flex; gap:6px; margin-left:8px;">
+                <a href="@backUrl" class="pr-nav-btn">← 戻る</a>
 
-    @if (Model.NextSlip != null)
-    {
-        <a href="/slip/@Model.NextSlip.Id@tabParam" class="btn btn-outline-primary btn-sm ms-auto">@Model.NextSlip.PayrollMonth ›</a>
-    }
-    else
-    {
-        <button class="btn btn-outline-primary btn-sm ms-auto" disabled>次月 ›</button>
-    }
-</div>
+                @if (Model.PrevSlip != null)
+                {
+                    <a href="/slip/@Model.PrevSlip.Id@tabParam" class="pr-nav-btn">‹ @Model.PrevSlip.PayrollMonth</a>
+                }
+                else
+                {
+                    <span class="pr-nav-btn pr-nav-btn--disabled">‹ 前月</span>
+                }
 
-<div class="row g-4 mb-4">
-    <div class="col-md-6">
-        <div class="card shadow-sm h-100">
-            <div class="card-header bg-primary text-white fw-semibold">支給情報</div>
-            <div class="card-body">
-                <dl class="row mb-0">
-                    <dt class="col-6 text-muted">支給月</dt>
-                    <dd class="col-6 text-end">@slip.PayrollMonth</dd>
-
-                    <dt class="col-6 text-muted">総支給額</dt>
-                    <dd class="col-6 text-end fw-semibold">@(slip.GrossAmount?.ToString("N0") ?? "-") 円</dd>
-
-                    <dt class="col-6 text-muted">基本給</dt>
-                    <dd class="col-6 text-end">@(slip.BasicAmount?.ToString("N0") ?? "-") 円</dd>
-
-                    @if (!isBonus)
-                    {
-                        <dt class="col-6 text-muted">残業時間</dt>
-                        <dd class="col-6 text-end">@(slip.OvertimeHours?.ToString("F2") ?? "-") 時間</dd>
-                    }
-                </dl>
+                @if (Model.NextSlip != null)
+                {
+                    <a href="/slip/@Model.NextSlip.Id@tabParam" class="pr-nav-btn">@Model.NextSlip.PayrollMonth ›</a>
+                }
+                else
+                {
+                    <span class="pr-nav-btn pr-nav-btn--disabled">次月 ›</span>
+                }
             </div>
         </div>
     </div>
 
-    <div class="col-md-6">
-        <div class="card shadow-sm h-100">
-            <div class="card-header bg-danger text-white fw-semibold">控除・手取り情報</div>
-            <div class="card-body">
-                <dl class="row mb-0">
-                    <dt class="col-6 text-muted">控除合計</dt>
-                    <dd class="col-6 text-end">@(slip.DeductionAmount?.ToString("N0") ?? "-") 円</dd>
-
-                    <dt class="col-6 text-muted">控除率</dt>
-                    <dd class="col-6 text-end">@(deductRate?.ToString("F1") + "%" ?? "-")</dd>
-
-                    <dt class="col-6 text-muted">手取り額</dt>
-                    <dd class="col-6 text-end fw-semibold text-success">@(slip.NetAmount?.ToString("N0") ?? "-") 円</dd>
-
-                    <dt class="col-6 text-muted">手取り率</dt>
-                    <dd class="col-6 text-end">@(netRate?.ToString("F1") + "%" ?? "-")</dd>
-                </dl>
+    @* ── 3-column KPI strip ── *@
+    <div class="pr-kpi" style="grid-template-columns: repeat(3,1fr);">
+        <div class="pr-kpi-cell">
+            <div class="pr-kpi-label">総支給額</div>
+            <div class="pr-kpi-value">@(slip.GrossAmount.HasValue ? "¥" + slip.GrossAmount.Value.ToString("N0") : "—")</div>
+        </div>
+        <div class="pr-kpi-cell">
+            <div class="pr-kpi-label">控除合計</div>
+            <div class="pr-kpi-value" style="color:#e11d48;">
+                @(slip.DeductionAmount.HasValue ? "−¥" + slip.DeductionAmount.Value.ToString("N0") : "—")
             </div>
+            <div class="pr-kpi-meta">控除率 @(deductRate?.ToString("F1") + "%" ?? "—")</div>
+        </div>
+        <div class="pr-kpi-cell" style="border-right:none;">
+            <div class="pr-kpi-label">手取り額</div>
+            <div class="pr-kpi-value" style="color:var(--pr-net-color);">
+                @(slip.NetAmount.HasValue ? "¥" + slip.NetAmount.Value.ToString("N0") : "—")
+            </div>
+            <div class="pr-kpi-meta">手取り率 @(netRate?.ToString("F1") + "%" ?? "—")</div>
         </div>
     </div>
 
-    <div class="col-12">
-        <div class="card shadow-sm">
-            <div class="card-header bg-light fw-semibold">取込情報</div>
-            <div class="card-body">
-                <dl class="row mb-0">
-                    <dt class="col-sm-3 text-muted">ファイル名</dt>
-                    <dd class="col-sm-9 font-monospace">@slip.SourceFileName</dd>
+    @* ── 支給 / 取込情報 ── *@
+    <div style="display:grid; grid-template-columns:1fr 1fr; border-bottom:1px solid var(--pr-border);">
 
-                    <dt class="col-sm-3 text-muted">取込日時</dt>
-                    <dd class="col-sm-9">@slip.ImportedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</dd>
-
-                    @if (!string.IsNullOrEmpty(slip.ParseMessage))
-                    {
-                        <dt class="col-sm-3 text-muted">メッセージ</dt>
-                        <dd class="col-sm-9 text-danger">@slip.ParseMessage</dd>
-                    }
-                </dl>
+        <div class="pr-section" style="border-bottom:none; border-right:1px solid var(--pr-border);">
+            <div style="font:600 11px/1 var(--pr-font-mono); letter-spacing:.1em; color:var(--pr-sub); margin-bottom:14px;">支給</div>
+            <div class="pr-dl-row">
+                <span>支給月</span>
+                <span>@slip.PayrollMonth</span>
             </div>
+            <div class="pr-dl-row">
+                <span>基本給</span>
+                <span>@(slip.BasicAmount?.ToString("N0") ?? "—") 円</span>
+            </div>
+            @if (!isBonus)
+            {
+                <div class="pr-dl-row">
+                    <span>残業時間</span>
+                    <span>@(slip.OvertimeHours?.ToString("F2") ?? "—") 時間</span>
+                </div>
+            }
+        </div>
+
+        <div class="pr-section" style="border-bottom:none;">
+            <div style="font:600 11px/1 var(--pr-font-mono); letter-spacing:.1em; color:var(--pr-sub); margin-bottom:14px;">ソースファイル</div>
+            <div class="pr-dl-row">
+                <span>ファイル名</span>
+                <span style="font-family:var(--pr-font-mono); font-size:12px; word-break:break-all;">@slip.SourceFileName</span>
+            </div>
+            <div class="pr-dl-row">
+                <span>取込日時</span>
+                <span style="font-family:var(--pr-font-mono); font-size:12px;">@slip.ImportedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</span>
+            </div>
+            @if (!string.IsNullOrEmpty(slip.ParseMessage))
+            {
+                <div class="pr-dl-row">
+                    <span>メッセージ</span>
+                    <span style="color:#e11d48;">@slip.ParseMessage</span>
+                </div>
+            }
+        </div>
+
+    </div>
+
+    @* ── 原本 PDF ── *@
+    <div class="pr-section" style="border-bottom:none;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+            <div class="pr-section-title">原本 PDF</div>
+            <a href="/api/payroll/slips/@slip.Id/pdf" target="_blank" class="pr-nav-btn">別タブで開く ↗</a>
+        </div>
+        <div style="border:1px solid var(--pr-border); border-radius:8px; overflow:hidden;">
+            <object data="/api/payroll/slips/@slip.Id/pdf"
+                    type="application/pdf"
+                    width="100%" height="900"
+                    style="display:block;">
+                <embed src="/api/payroll/slips/@slip.Id/pdf"
+                       type="application/pdf"
+                       width="100%" height="900"
+                       style="display:block;" />
+            </object>
         </div>
     </div>
+
 </div>
 
-<div class="card shadow-sm">
-    <div class="card-header bg-light fw-semibold d-flex justify-content-between align-items-center">
-        <span>原本 PDF</span>
-        <a href="/api/payroll/slips/@slip.Id/pdf" target="_blank" class="btn btn-outline-secondary btn-sm">別タブで開く</a>
-    </div>
-    <div class="card-body p-0">
-        <object data="/api/payroll/slips/@slip.Id/pdf"
-                type="application/pdf"
-                width="100%" height="900"
-                style="display:block;">
-            <embed src="/api/payroll/slips/@slip.Id/pdf"
-                   type="application/pdf"
-                   width="100%" height="900"
-                   style="display:block;" />
-        </object>
-    </div>
-</div>
+@section Scripts {
+<style>
+.pr-nav-btn {
+    font: 500 12px/1 var(--pr-font-sans);
+    padding: 7px 13px;
+    border-radius: 7px;
+    border: 1px solid var(--pr-border);
+    color: var(--pr-text);
+    text-decoration: none;
+    background: transparent;
+    white-space: nowrap;
+    transition: background .15s, color .15s;
+    cursor: pointer;
+}
+.pr-nav-btn:hover { background: var(--pr-faint); color: var(--pr-text); }
+.pr-nav-btn--disabled {
+    opacity: .35;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+.pr-dl-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 9px 0;
+    font-size: 13px;
+    border-top: 1px solid var(--pr-row-border);
+}
+.pr-dl-row span:first-child { color: var(--pr-sub); flex-shrink: 0; }
+.pr-dl-row span:last-child  { color: var(--pr-row-strong); text-align: right; }
+</style>
+<script>
+(function() {
+    const saved = localStorage.getItem('pr-theme');
+    if (saved === 'dark') document.documentElement.classList.add('dark');
+})();
+</script>
+}
