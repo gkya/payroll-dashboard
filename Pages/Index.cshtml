@@ -183,6 +183,24 @@
                                         </tr>
                                     }
                                 </tbody>
+                                @{
+                                    var parsed = Model.SalarySlips.Where(s => s.ImportStatus == PayrollImportStatus.Parsed).ToList();
+                                    decimal? Avg(Func<PayrollSlip, decimal?> sel) =>
+                                        parsed.Any(s => sel(s).HasValue)
+                                            ? parsed.Where(s => sel(s).HasValue).Average(s => sel(s)!.Value)
+                                            : null;
+                                }
+                                <tfoot class="table-light fw-semibold">
+                                    <tr>
+                                        <td>平均（@parsed.Count 件）</td>
+                                        <td class="text-end">@(Avg(s => s.GrossAmount)?.ToString("N0") ?? "-")</td>
+                                        <td class="text-end">@(Avg(s => s.BasicAmount)?.ToString("N0") ?? "-")</td>
+                                        <td class="text-end">@(Avg(s => s.OvertimeHours)?.ToString("F2") ?? "-")</td>
+                                        <td class="text-end">@(Avg(s => s.DeductionAmount)?.ToString("N0") ?? "-")</td>
+                                        <td class="text-end">@(Avg(s => s.NetAmount)?.ToString("N0") ?? "-")</td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
                             </table>
                         </div>
                     </div>
