@@ -1,5 +1,6 @@
-﻿@page
+@page
 @model IndexModel
+@using PayrollDashboard.Models
 @{
     ViewData["Title"] = "Payroll Dashboard";
 }
@@ -20,22 +21,21 @@
                 </div>
             </div>
         </div>
-
         <div class="col-md-4">
             <div class="card h-100 shadow-sm">
                 <div class="card-body">
-                    <h2 class="h5">List</h2>
-                    <p class="card-text">取り込んだ給与明細を一覧で確認します。</p>
-                    <span class="badge bg-secondary">@Model.PayrollSlips.Count 件</span>
+                    <h2 class="h5">給与</h2>
+                    <p class="card-text">取り込んだ給与明細を確認します。</p>
+                    <span class="badge bg-secondary">@Model.SalarySlips.Count 件</span>
                 </div>
             </div>
         </div>
-
         <div class="col-md-4">
             <div class="card h-100 shadow-sm">
                 <div class="card-body">
-                    <h2 class="h5">Dashboard</h2>
-                    <p class="card-text">支給額、控除額、手取り額の推移を見える化します。</p>
+                    <h2 class="h5">賞与</h2>
+                    <p class="card-text">取り込んだ賞与明細を確認します。</p>
+                    <span class="badge bg-secondary">@Model.BonusSlips.Count 件</span>
                 </div>
             </div>
         </div>
@@ -43,59 +43,124 @@
 
     @if (Model.PayrollSlips.Count > 0)
     {
-        var ordered = Model.PayrollSlips.OrderBy(s => s.PayrollMonth).ToList();
-        var labels    = string.Join(",", ordered.Select(s => $"\"{s.PayrollMonth}\""));
-        var grossData = string.Join(",", ordered.Select(s => s.GrossAmount.HasValue     ? s.GrossAmount.Value.ToString()     : "null"));
-        var deductData= string.Join(",", ordered.Select(s => s.DeductionAmount.HasValue ? s.DeductionAmount.Value.ToString() : "null"));
-        var netData   = string.Join(",", ordered.Select(s => s.NetAmount.HasValue       ? s.NetAmount.Value.ToString()       : "null"));
+        <ul class="nav nav-tabs mb-4" role="tablist">
+            <li class="nav-item">
+                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#salary-tab">給与</button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#bonus-tab">賞与</button>
+            </li>
+        </ul>
 
-        <div class="card shadow-sm mb-4">
-            <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                <h2 class="h5 mb-0">推移グラフ</h2>
-                <div class="btn-group btn-group-sm" role="group">
-                    <button type="button" class="btn btn-outline-primary active" onclick="toggleDataset(0, this)">総支給額</button>
-                    <button type="button" class="btn btn-outline-danger active"  onclick="toggleDataset(1, this)">控除合計</button>
-                    <button type="button" class="btn btn-outline-success active" onclick="toggleDataset(2, this)">手取り額</button>
-                </div>
-            </div>
-            <div class="card-body">
-                <canvas id="payrollChart" height="80"></canvas>
-            </div>
-        </div>
+        <div class="tab-content">
 
-        <div class="card shadow-sm">
-            <div class="card-header bg-light">
-                <h2 class="h5 mb-0">Imported Payroll Slips</h2>
+            @* ── 給与タブ ── *@
+            <div class="tab-pane fade show active" id="salary-tab">
+                @if (Model.SalarySlips.Count > 0)
+                {
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                            <h2 class="h5 mb-0">給与推移</h2>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary active"  onclick="toggle(salaryChart, 0, this)">総支給額</button>
+                                <button class="btn btn-outline-warning active"  onclick="toggle(salaryChart, 1, this)">基本給</button>
+                                <button class="btn btn-outline-danger active"   onclick="toggle(salaryChart, 2, this)">控除合計</button>
+                                <button class="btn btn-outline-success active"  onclick="toggle(salaryChart, 3, this)">手取り額</button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="salaryChart" height="80"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card shadow-sm mb-4">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>支給月</th>
+                                        <th class="text-end">総支給額</th>
+                                        <th class="text-end">基本給</th>
+                                        <th class="text-end">控除合計</th>
+                                        <th class="text-end">手取り額</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var slip in Model.SalarySlips)
+                                    {
+                                        <tr>
+                                            <td>@slip.PayrollMonth</td>
+                                            <td class="text-end">@(slip.GrossAmount?.ToString("N0") ?? "-")</td>
+                                            <td class="text-end">@(slip.BasicAmount?.ToString("N0") ?? "-")</td>
+                                            <td class="text-end">@(slip.DeductionAmount?.ToString("N0") ?? "-")</td>
+                                            <td class="text-end">@(slip.NetAmount?.ToString("N0") ?? "-")</td>
+                                            <td><span class="badge @(slip.ImportStatus == PayrollImportStatus.Parsed ? "bg-success" : "bg-warning")">@slip.ImportStatus</span></td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted">給与データがありません。</p>
+                }
             </div>
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Payroll Month</th>
-                            <th class="text-end">総支給額</th>
-                            <th class="text-end">控除合計</th>
-                            <th class="text-end">手取り額</th>
-                            <th>Status</th>
-                            <th>Imported At</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var slip in Model.PayrollSlips)
-                        {
-                            <tr>
-                                <td>@slip.PayrollMonth</td>
-                                <td class="text-end">@(slip.GrossAmount.HasValue ? slip.GrossAmount.Value.ToString("N0") : "-")</td>
-                                <td class="text-end">@(slip.DeductionAmount.HasValue ? slip.DeductionAmount.Value.ToString("N0") : "-")</td>
-                                <td class="text-end">@(slip.NetAmount.HasValue ? slip.NetAmount.Value.ToString("N0") : "-")</td>
-                                <td>
-                                    <span class="badge @(slip.ImportStatus == PayrollDashboard.Models.PayrollImportStatus.Parsed ? "bg-success" : "bg-warning")">@slip.ImportStatus</span>
-                                </td>
-                                <td>@slip.ImportedAt.LocalDateTime.ToString("yyyy-MM-dd HH:mm")</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
+
+            @* ── 賞与タブ ── *@
+            <div class="tab-pane fade" id="bonus-tab">
+                @if (Model.BonusSlips.Count > 0)
+                {
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                            <h2 class="h5 mb-0">賞与推移</h2>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary active" onclick="toggle(bonusChart, 0, this)">総支給額</button>
+                                <button class="btn btn-outline-danger active"  onclick="toggle(bonusChart, 1, this)">控除合計</button>
+                                <button class="btn btn-outline-success active" onclick="toggle(bonusChart, 2, this)">手取り額</button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="bonusChart" height="80"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card shadow-sm mb-4">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>支給月</th>
+                                        <th class="text-end">総支給額</th>
+                                        <th class="text-end">控除合計</th>
+                                        <th class="text-end">手取り額</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var slip in Model.BonusSlips)
+                                    {
+                                        <tr>
+                                            <td>@slip.PayrollMonth</td>
+                                            <td class="text-end">@(slip.GrossAmount?.ToString("N0") ?? "-")</td>
+                                            <td class="text-end">@(slip.DeductionAmount?.ToString("N0") ?? "-")</td>
+                                            <td class="text-end">@(slip.NetAmount?.ToString("N0") ?? "-")</td>
+                                            <td><span class="badge @(slip.ImportStatus == PayrollImportStatus.Parsed ? "bg-success" : "bg-warning")">@slip.ImportStatus</span></td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted">賞与データがありません。</p>
+                }
             </div>
+
         </div>
     }
     else
@@ -108,65 +173,63 @@
 
 @if (Model.PayrollSlips.Count > 0)
 {
-    var ordered    = Model.PayrollSlips.OrderBy(s => s.PayrollMonth).ToList();
-    var labels     = string.Join(",", ordered.Select(s => $"\"{s.PayrollMonth}\""));
-    var grossData  = string.Join(",", ordered.Select(s => s.GrossAmount.HasValue     ? s.GrossAmount.Value.ToString()     : "null"));
-    var deductData = string.Join(",", ordered.Select(s => s.DeductionAmount.HasValue ? s.DeductionAmount.Value.ToString() : "null"));
-    var netData    = string.Join(",", ordered.Select(s => s.NetAmount.HasValue       ? s.NetAmount.Value.ToString()       : "null"));
+    string Labels(IList<PayrollSlip> slips) =>
+        string.Join(",", slips.Select(s => $"\"{s.PayrollMonth}\""));
+    string Data(IList<PayrollSlip> slips, Func<PayrollSlip, decimal?> sel) =>
+        string.Join(",", slips.Select(s => sel(s) is { } v ? v.ToString() : "null"));
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        const chart = new Chart(document.getElementById('payrollChart'), {
-            type: 'line',
-            data: {
-                labels: [@Html.Raw(labels)],
-                datasets: [
-                    {
-                        label: '総支給額',
-                        data: [@Html.Raw(grossData)],
-                        borderColor: 'rgb(13, 110, 253)',
-                        backgroundColor: 'rgba(13, 110, 253, 0.1)',
-                        tension: 0.3,
-                        fill: false,
-                    },
-                    {
-                        label: '控除合計',
-                        data: [@Html.Raw(deductData)],
-                        borderColor: 'rgb(220, 53, 69)',
-                        backgroundColor: 'rgba(220, 53, 69, 0.1)',
-                        tension: 0.3,
-                        fill: false,
-                    },
-                    {
-                        label: '手取り額',
-                        data: [@Html.Raw(netData)],
-                        borderColor: 'rgb(25, 135, 84)',
-                        backgroundColor: 'rgba(25, 135, 84, 0.1)',
-                        tension: 0.3,
-                        fill: false,
-                    },
-                ]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: { display: false },
+        function makeChart(id, labels, gross, basic, deduct, net) {
+            return new Chart(document.getElementById(id), {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [
+                        { label: '総支給額', data: gross, borderColor: 'rgb(13,110,253)',  tension: 0.3, fill: false },
+                        { label: '基本給',   data: basic, borderColor: 'rgb(255,193,7)',   tension: 0.3, fill: false },
+                        { label: '控除合計', data: deduct, borderColor: 'rgb(220,53,69)',  tension: 0.3, fill: false },
+                        { label: '手取り額', data: net,    borderColor: 'rgb(25,135,84)',  tension: 0.3, fill: false },
+                    ]
                 },
-                scales: {
-                    y: {
-                        ticks: {
-                            callback: value => value.toLocaleString() + ' 円'
-                        }
-                    }
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { ticks: { callback: v => v.toLocaleString() + ' 円' } } }
                 }
-            }
-        });
+            });
+        }
 
-        function toggleDataset(index, btn) {
+        function toggle(chart, index, btn) {
             const meta = chart.getDatasetMeta(index);
             meta.hidden = !meta.hidden;
             btn.classList.toggle('active');
             chart.update();
+        }
+
+        @if (Model.SalarySlips.Count > 0)
+        {
+            <text>
+        const salaryChart = makeChart('salaryChart',
+            [@Html.Raw(Labels(Model.SalarySlips))],
+            [@Html.Raw(Data(Model.SalarySlips, s => s.GrossAmount))],
+            [@Html.Raw(Data(Model.SalarySlips, s => s.BasicAmount))],
+            [@Html.Raw(Data(Model.SalarySlips, s => s.DeductionAmount))],
+            [@Html.Raw(Data(Model.SalarySlips, s => s.NetAmount))]
+        );
+            </text>
+        }
+        @if (Model.BonusSlips.Count > 0)
+        {
+            <text>
+        const bonusChart = makeChart('bonusChart',
+            [@Html.Raw(Labels(Model.BonusSlips))],
+            [@Html.Raw(Data(Model.BonusSlips, s => s.GrossAmount))],
+            [@Html.Raw(Data(Model.BonusSlips, s => s.BasicAmount))],
+            [@Html.Raw(Data(Model.BonusSlips, s => s.DeductionAmount))],
+            [@Html.Raw(Data(Model.BonusSlips, s => s.NetAmount))]
+        );
+            </text>
         }
     </script>
 }

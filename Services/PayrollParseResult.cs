@@ -8,4 +8,5 @@ public class PayrollParseResult
     public decimal? GrossAmount { get; set; }
     public decimal? DeductionAmount { get; set; }
     public decimal? NetAmount { get; set; }
+    public decimal? BasicAmount { get; set; }
 }

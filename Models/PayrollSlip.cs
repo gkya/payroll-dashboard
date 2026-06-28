@@ -4,6 +4,8 @@ public class PayrollSlip
 {
     public int Id { get; set; }
 
+    public PayrollSlipType SlipType { get; set; } = PayrollSlipType.Salary;
+
     public string PayrollMonth { get; set; } = string.Empty;
 
     public string SourceFileName { get; set; } = string.Empty;
@@ -17,6 +19,8 @@ public class PayrollSlip
     public decimal? DeductionAmount { get; set; }
 
     public decimal? NetAmount { get; set; }
+
+    public decimal? BasicAmount { get; set; }
 
     public string? ParseMessage { get; set; }
 

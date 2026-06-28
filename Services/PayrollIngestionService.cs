@@ -27,6 +27,44 @@ public class PayrollIngestionService
     return $"{year}-{month}";
   }
 
+  public IReadOnlyList<PayrollSlip> ImportAllFromDirectory(string directory, PayrollSlipType slipType)
+  {
+    var results = new List<PayrollSlip>();
+    foreach (var filePath in Directory.GetFiles(directory, "*.pdf"))
+    {
+      var fileName = Path.GetFileName(filePath);
+      if (_repository.ExistsByFileName(fileName)) continue;
+
+      var month = ExtractMonthFromFileName(fileName) ?? string.Empty;
+      var slip = ImportFromPath(filePath, fileName, month, slipType);
+      results.Add(slip);
+    }
+    return results;
+  }
+
+  private PayrollSlip ImportFromPath(string filePath, string fileName, string payrollMonth, PayrollSlipType slipType)
+  {
+    var parseResult = _parser.Parse(filePath);
+
+    var slip = new PayrollSlip
+    {
+      SlipType = slipType,
+      PayrollMonth = payrollMonth,
+      SourceFileName = fileName,
+      SourceFilePath = filePath,
+      ImportStatus = parseResult.Success ? PayrollImportStatus.Parsed : PayrollImportStatus.ParseFailed,
+      GrossAmount = parseResult.GrossAmount,
+      DeductionAmount = parseResult.DeductionAmount,
+      NetAmount = parseResult.NetAmount,
+      BasicAmount = parseResult.BasicAmount,
+      ParseMessage = parseResult.Message,
+      ImportedAt = DateTimeOffset.UtcNow
+    };
+
+    _repository.Save(slip);
+    return slip;
+  }
+
   public PayrollSlip Import(IFormFile file, string payrollMonth)
   {
     var filePath = _fileStorage.SaveFile(file);
@@ -41,6 +79,7 @@ public class PayrollIngestionService
       GrossAmount = parseResult.GrossAmount,
       DeductionAmount = parseResult.DeductionAmount,
       NetAmount = parseResult.NetAmount,
+      BasicAmount = parseResult.BasicAmount,
       ParseMessage = parseResult.Message,
       ImportedAt = DateTimeOffset.UtcNow
     };

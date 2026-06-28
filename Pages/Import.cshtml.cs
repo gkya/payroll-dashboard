@@ -25,9 +25,27 @@ public class ImportModel : PageModel
         _ingestionService = ingestionService;
     }
 
+    public string? BulkMessage { get; private set; }
+
     public void OnGet()
     {
         _logger.LogInformation("Import page was opened.");
+    }
+
+    public IActionResult OnPostImportAll()
+    {
+        var root = Path.Combine(Directory.GetCurrentDirectory(), "datas");
+        var salaryDir = Path.Combine(root, "salary");
+        var bonusDir  = Path.Combine(root, "bonus");
+
+        var count = 0;
+        if (Directory.Exists(salaryDir))
+            count += _ingestionService.ImportAllFromDirectory(salaryDir, PayrollSlipType.Salary).Count;
+        if (Directory.Exists(bonusDir))
+            count += _ingestionService.ImportAllFromDirectory(bonusDir, PayrollSlipType.Bonus).Count;
+
+        BulkMessage = count == 0 ? "新しい PDF はありませんでした。" : $"{count} 件取り込みました。";
+        return Page();
     }
 
     public IActionResult OnPost()

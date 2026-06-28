@@ -11,6 +11,8 @@ public class IndexModel : PageModel
     private readonly IPayrollRepository _repository;
 
     public List<PayrollSlip> PayrollSlips { get; set; } = [];
+    public List<PayrollSlip> SalarySlips { get; set; } = [];
+    public List<PayrollSlip> BonusSlips { get; set; } = [];
 
     public IndexModel(ILogger<IndexModel> logger, IPayrollRepository repository)
     {
@@ -22,5 +24,7 @@ public class IndexModel : PageModel
     {
         _logger.LogInformation("Dashboard page was opened.");
         PayrollSlips = _repository.GetAll().ToList();
+        SalarySlips = [.. PayrollSlips.Where(s => s.SlipType == PayrollSlipType.Salary)];
+        BonusSlips  = [.. PayrollSlips.Where(s => s.SlipType == PayrollSlipType.Bonus)];
     }
 }
