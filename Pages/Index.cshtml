@@ -42,6 +42,67 @@
         </div>
     </div>
 
+    @if (Model.SalarySlips.Count > 0 || Model.AnnualIncomeSlips.Count > 0)
+    {
+        var latestSalary = Model.SalarySlips.LastOrDefault();
+        var latestAnnual = Model.AnnualIncomeSlips.LastOrDefault();
+
+        <div class="row g-3 mb-5">
+            <div class="col-sm-6 col-xl-3">
+                <div class="card shadow-sm h-100 border-start border-success border-4">
+                    <div class="card-body">
+                        <div class="text-muted small mb-1">直近の手取り額</div>
+                        <div class="fs-4 fw-bold">
+                            @(latestSalary?.NetAmount.HasValue == true
+                                ? "¥" + latestSalary.NetAmount.Value.ToString("N0")
+                                : "—")
+                        </div>
+                        <div class="text-muted small mt-1">@(latestSalary?.PayrollMonth ?? "—")</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="card shadow-sm h-100 border-start border-primary border-4">
+                    <div class="card-body">
+                        <div class="text-muted small mb-1">直近の総支給額</div>
+                        <div class="fs-4 fw-bold">
+                            @(latestSalary?.GrossAmount.HasValue == true
+                                ? "¥" + latestSalary.GrossAmount.Value.ToString("N0")
+                                : "—")
+                        </div>
+                        <div class="text-muted small mt-1">@(latestSalary?.PayrollMonth ?? "—")</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="card shadow-sm h-100 border-start border-secondary border-4">
+                    <div class="card-body">
+                        <div class="text-muted small mb-1">直近の残業時間</div>
+                        <div class="fs-4 fw-bold">
+                            @(latestSalary?.OvertimeHours.HasValue == true
+                                ? latestSalary.OvertimeHours.Value.ToString("F2") + " h"
+                                : "—")
+                        </div>
+                        <div class="text-muted small mt-1">@(latestSalary?.PayrollMonth ?? "—")</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="card shadow-sm h-100 border-start border-warning border-4">
+                    <div class="card-body">
+                        <div class="text-muted small mb-1">最新の年収（源泉徴収票）</div>
+                        <div class="fs-4 fw-bold">
+                            @(latestAnnual?.TotalIncome.HasValue == true
+                                ? "¥" + latestAnnual.TotalIncome.Value.ToString("N0")
+                                : "—")
+                        </div>
+                        <div class="text-muted small mt-1">@(latestAnnual != null ? latestAnnual.FiscalYear + " 年" : "—")</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
     @if (Model.PayrollSlips.Count > 0 || Model.AnnualIncomeSlips.Count > 0)
     {
         <ul class="nav nav-tabs mb-4" role="tablist">
