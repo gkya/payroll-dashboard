@@ -10,12 +10,13 @@
         <p class="lead">給与明細 PDF を取り込み、一覧・集計・可視化する学習用アプリです。</p>
     </div>
 
-    <div class="row g-4">
+    <div class="row g-4 mb-5">
         <div class="col-md-4">
             <div class="card h-100 shadow-sm">
                 <div class="card-body">
                     <h2 class="h5">Upload</h2>
                     <p class="card-text">給与明細 PDF をアップロードして、アプリに取り込みます。</p>
+                    <a href="/Import" class="btn btn-sm btn-primary">Go to Import</a>
                 </div>
             </div>
         </div>
@@ -25,6 +26,7 @@
                 <div class="card-body">
                     <h2 class="h5">List</h2>
                     <p class="card-text">取り込んだ給与明細を一覧で確認します。</p>
+                    <span class="badge bg-secondary">@Model.PayrollSlips.Count 件</span>
                 </div>
             </div>
         </div>
@@ -38,4 +40,46 @@
             </div>
         </div>
     </div>
+
+    @if (Model.PayrollSlips.Count > 0)
+    {
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <h2 class="h5 mb-0">Imported Payroll Slips</h2>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Payroll Month</th>
+                            <th>File Name</th>
+                            <th>Status</th>
+                            <th>Imported At</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var slip in Model.PayrollSlips)
+                        {
+                            <tr>
+                                <td>@slip.Id</td>
+                                <td>@slip.PayrollMonth</td>
+                                <td>@slip.SourceFileName</td>
+                                <td>
+                                    <span class="badge bg-success">@slip.ImportStatus</span>
+                                </td>
+                                <td>@slip.ImportedAt.LocalDateTime.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info" role="alert">
+            <p class="mb-0">まだデータがありません。<a href="/Import">Import ページ</a>から PDF をアップロードしてください。</p>
+        </div>
+    }
 </div>
