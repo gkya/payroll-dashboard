@@ -183,21 +183,14 @@
                                         </tr>
                                     }
                                 </tbody>
-                                @{
-                                    var parsed = Model.SalarySlips.Where(s => s.ImportStatus == PayrollImportStatus.Parsed).ToList();
-                                    decimal? Avg(Func<PayrollSlip, decimal?> sel) =>
-                                        parsed.Any(s => sel(s).HasValue)
-                                            ? parsed.Where(s => sel(s).HasValue).Average(s => sel(s)!.Value)
-                                            : null;
-                                }
                                 <tfoot class="table-light fw-semibold">
                                     <tr>
-                                        <td>平均（@parsed.Count 件）</td>
-                                        <td class="text-end">@(Avg(s => s.GrossAmount)?.ToString("N0") ?? "-")</td>
-                                        <td class="text-end">@(Avg(s => s.BasicAmount)?.ToString("N0") ?? "-")</td>
-                                        <td class="text-end">@(Avg(s => s.OvertimeHours)?.ToString("F2") ?? "-")</td>
-                                        <td class="text-end">@(Avg(s => s.DeductionAmount)?.ToString("N0") ?? "-")</td>
-                                        <td class="text-end">@(Avg(s => s.NetAmount)?.ToString("N0") ?? "-")</td>
+                                        <td id="salary-avg-label"></td>
+                                        <td class="text-end" id="salary-avg-gross"></td>
+                                        <td class="text-end" id="salary-avg-basic"></td>
+                                        <td class="text-end" id="salary-avg-overtime"></td>
+                                        <td class="text-end" id="salary-avg-deduct"></td>
+                                        <td class="text-end" id="salary-avg-net"></td>
                                         <td></td>
                                     </tr>
                                 </tfoot>
@@ -429,6 +422,21 @@
             allSalarySlips.map(s => s.overtime)
         );
 
+        function updateSalaryAverage(slips) {
+            const avg = key => {
+                const vals = slips.map(s => s[key]).filter(v => v != null);
+                return vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+            };
+            const fmtInt  = v => v != null ? Math.round(v).toLocaleString('ja-JP') : '-';
+            const fmtDec  = v => v != null ? v.toFixed(2) : '-';
+            document.getElementById('salary-avg-label').textContent   = `平均（${slips.length} 件）`;
+            document.getElementById('salary-avg-gross').textContent   = fmtInt(avg('gross'));
+            document.getElementById('salary-avg-basic').textContent   = fmtInt(avg('basic'));
+            document.getElementById('salary-avg-overtime').textContent = fmtDec(avg('overtime'));
+            document.getElementById('salary-avg-deduct').textContent  = fmtInt(avg('deduct'));
+            document.getElementById('salary-avg-net').textContent     = fmtInt(avg('net'));
+        }
+
         function filterSalary(year) {
             const f = year === 'all' ? allSalarySlips : allSalarySlips.filter(s => s.year === year);
             salaryChart.data.labels = f.map(s => s.month);
@@ -440,7 +448,10 @@
             });
             document.querySelectorAll('.salary-year-btn').forEach(btn =>
                 btn.classList.toggle('active', btn.dataset.year === year));
+            updateSalaryAverage(f);
         }
+
+        updateSalaryAverage(allSalarySlips);
             </text>
         }
         @if (Model.BonusSlips.Count > 0)
