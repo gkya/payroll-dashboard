@@ -94,11 +94,14 @@
         <a href="/api/payroll/slips/@slip.Id/pdf" target="_blank" class="btn btn-outline-secondary btn-sm">別タブで開く</a>
     </div>
     <div class="card-body p-0">
-        <iframe src="/api/payroll/slips/@slip.Id/pdf"
+        <object data="/api/payroll/slips/@slip.Id/pdf"
+                type="application/pdf"
                 width="100%" height="900"
-                style="border:none; display:block;"
-                title="@slip.SourceFileName">
-            <p>PDF を表示できません。<a href="/api/payroll/slips/@slip.Id/pdf">ダウンロード</a>してください。</p>
-        </iframe>
+                style="display:block;">
+            <embed src="/api/payroll/slips/@slip.Id/pdf"
+                   type="application/pdf"
+                   width="100%" height="900"
+                   style="display:block;" />
+        </object>
     </div>
 </div>

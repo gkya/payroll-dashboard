@@ -47,6 +47,7 @@ public class PayrollController : ControllerBase
         if (!System.IO.File.Exists(slip.SourceFilePath)) return NotFound("PDF file not found on disk");
 
         var bytes = System.IO.File.ReadAllBytes(slip.SourceFilePath);
+        Response.Headers["Content-Disposition"] = $"inline; filename=\"{slip.SourceFileName}\"";
         return File(bytes, "application/pdf", enableRangeProcessing: true);
     }
 }
