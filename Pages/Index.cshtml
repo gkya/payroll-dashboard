@@ -66,10 +66,11 @@
                         <div class="card-header bg-light d-flex justify-content-between align-items-center">
                             <h2 class="h5 mb-0">給与推移</h2>
                             <div class="btn-group btn-group-sm">
-                                <button class="btn btn-outline-primary active"  onclick="toggle(salaryChart, 0, this)">総支給額</button>
-                                <button class="btn btn-outline-warning active"  onclick="toggle(salaryChart, 1, this)">基本給</button>
-                                <button class="btn btn-outline-danger active"   onclick="toggle(salaryChart, 2, this)">控除合計</button>
-                                <button class="btn btn-outline-success active"  onclick="toggle(salaryChart, 3, this)">手取り額</button>
+                                <button class="btn btn-outline-primary active"    onclick="toggle(salaryChart, 0, this)">総支給額</button>
+                                <button class="btn btn-outline-warning active"    onclick="toggle(salaryChart, 1, this)">基本給</button>
+                                <button class="btn btn-outline-danger active"     onclick="toggle(salaryChart, 2, this)">控除合計</button>
+                                <button class="btn btn-outline-success active"    onclick="toggle(salaryChart, 3, this)">手取り額</button>
+                                <button class="btn btn-outline-secondary active"  onclick="toggle(salaryChart, 4, this)">残業時間</button>
                             </div>
                         </div>
                         <div class="card-body">
@@ -245,6 +246,32 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
+        // 給与専用：右軸に残業時間を追加
+        function makeSalaryChart(id, labels, gross, basic, deduct, net, overtime) {
+            return new Chart(document.getElementById(id), {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [
+                        { label: '総支給額', data: gross,    yAxisID: 'y',  borderColor: 'rgb(13,110,253)',  tension: 0.3, fill: false },
+                        { label: '基本給',   data: basic,    yAxisID: 'y',  borderColor: 'rgb(255,193,7)',   tension: 0.3, fill: false },
+                        { label: '控除合計', data: deduct,   yAxisID: 'y',  borderColor: 'rgb(220,53,69)',   tension: 0.3, fill: false },
+                        { label: '手取り額', data: net,      yAxisID: 'y',  borderColor: 'rgb(25,135,84)',   tension: 0.3, fill: false },
+                        { label: '残業時間', data: overtime, yAxisID: 'y2', borderColor: 'rgb(108,117,125)', tension: 0.3, fill: false, borderDash: [5, 5] },
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y:  { position: 'left',  ticks: { callback: v => v.toLocaleString() + ' 円' } },
+                        y2: { position: 'right', ticks: { callback: v => v + ' h' }, grid: { drawOnChartArea: false } }
+                    }
+                }
+            });
+        }
+
+        // 賞与・源泉徴収票用（右軸なし）
         function makeChart(id, labels, gross, basic, deduct, net) {
             return new Chart(document.getElementById(id), {
                 type: 'line',
@@ -275,12 +302,13 @@
         @if (Model.SalarySlips.Count > 0)
         {
             <text>
-        const salaryChart = makeChart('salaryChart',
+        const salaryChart = makeSalaryChart('salaryChart',
             [@Html.Raw(Labels(Model.SalarySlips))],
             [@Html.Raw(Data(Model.SalarySlips, s => s.GrossAmount))],
             [@Html.Raw(Data(Model.SalarySlips, s => s.BasicAmount))],
             [@Html.Raw(Data(Model.SalarySlips, s => s.DeductionAmount))],
-            [@Html.Raw(Data(Model.SalarySlips, s => s.NetAmount))]
+            [@Html.Raw(Data(Model.SalarySlips, s => s.NetAmount))],
+            [@Html.Raw(Data(Model.SalarySlips, s => s.OvertimeHours))]
         );
             </text>
         }
