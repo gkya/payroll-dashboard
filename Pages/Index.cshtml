@@ -1,6 +1,7 @@
 @page
 @model IndexModel
 @using PayrollDashboard.Models
+@using System.Linq
 @{
     ViewData["Title"] = "Payroll Dashboard";
 }
@@ -41,7 +42,7 @@
         </div>
     </div>
 
-    @if (Model.PayrollSlips.Count > 0)
+    @if (Model.PayrollSlips.Count > 0 || Model.AnnualIncomeSlips.Count > 0)
     {
         <ul class="nav nav-tabs mb-4" role="tablist">
             <li class="nav-item">
@@ -49,6 +50,9 @@
             </li>
             <li class="nav-item">
                 <button class="nav-link" data-bs-toggle="tab" data-bs-target="#bonus-tab">賞与</button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#annual-tab">源泉徴収票</button>
             </li>
         </ul>
 
@@ -161,6 +165,61 @@
                 }
             </div>
 
+            @* ── 源泉徴収票タブ ── *@
+            <div class="tab-pane fade" id="annual-tab">
+                @if (Model.AnnualIncomeSlips.Count > 0)
+                {
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                            <h2 class="h5 mb-0">年収推移</h2>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary active"  onclick="toggle(annualChart, 0, this)">支払金額</button>
+                                <button class="btn btn-outline-warning active"  onclick="toggle(annualChart, 1, this)">給与所得控除後</button>
+                                <button class="btn btn-outline-danger active"   onclick="toggle(annualChart, 2, this)">所得控除合計</button>
+                                <button class="btn btn-outline-success active"  onclick="toggle(annualChart, 3, this)">源泉徴収税額</button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="annualChart" height="80"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card shadow-sm mb-4">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>年度</th>
+                                        <th class="text-end">支払金額</th>
+                                        <th class="text-end">給与所得控除後の金額</th>
+                                        <th class="text-end">所得控除の額の合計額</th>
+                                        <th class="text-end">源泉徴収税額</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var slip in Model.AnnualIncomeSlips)
+                                    {
+                                        <tr>
+                                            <td>@slip.FiscalYear 年</td>
+                                            <td class="text-end">@(slip.TotalIncome?.ToString("N0") ?? "-")</td>
+                                            <td class="text-end">@(slip.AfterDeduction?.ToString("N0") ?? "-")</td>
+                                            <td class="text-end">@(slip.TotalDeductions?.ToString("N0") ?? "-")</td>
+                                            <td class="text-end">@(slip.WithholdingTax?.ToString("N0") ?? "-")</td>
+                                            <td><span class="badge @(slip.ImportStatus == PayrollImportStatus.Parsed ? "bg-success" : "bg-warning")">@slip.ImportStatus</span></td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted">源泉徴収票データがありません。</p>
+                }
+            </div>
+
         </div>
     }
     else
@@ -171,12 +230,16 @@
     }
 </div>
 
-@if (Model.PayrollSlips.Count > 0)
+@if (Model.PayrollSlips.Count > 0 || Model.AnnualIncomeSlips.Count > 0)
 {
     string Labels(IList<PayrollSlip> slips) =>
         string.Join(",", slips.Select(s => $"\"{s.PayrollMonth}\""));
     string Data(IList<PayrollSlip> slips, Func<PayrollSlip, decimal?> sel) =>
         string.Join(",", slips.Select(s => sel(s) is { } v ? v.ToString() : "null"));
+    string AnnualLabels() =>
+        string.Join(",", Model.AnnualIncomeSlips.Select(s => $"\"{s.FiscalYear}年\""));
+    string AnnualData(Func<AnnualIncomeSlip, decimal?> sel) =>
+        string.Join(",", Model.AnnualIncomeSlips.Select(s => sel(s) is { } v ? v.ToString() : "null"));
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
@@ -228,6 +291,18 @@
             [@Html.Raw(Data(Model.BonusSlips, s => s.BasicAmount))],
             [@Html.Raw(Data(Model.BonusSlips, s => s.DeductionAmount))],
             [@Html.Raw(Data(Model.BonusSlips, s => s.NetAmount))]
+        );
+            </text>
+        }
+        @if (Model.AnnualIncomeSlips.Count > 0)
+        {
+            <text>
+        const annualChart = makeChart('annualChart',
+            [@Html.Raw(AnnualLabels())],
+            [@Html.Raw(AnnualData(s => s.TotalIncome))],
+            [@Html.Raw(AnnualData(s => s.AfterDeduction))],
+            [@Html.Raw(AnnualData(s => s.TotalDeductions))],
+            [@Html.Raw(AnnualData(s => s.WithholdingTax))]
         );
             </text>
         }

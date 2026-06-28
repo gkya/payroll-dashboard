@@ -7,6 +7,9 @@ builder.Services.AddScoped<PayrollDashboard.Repositories.IPayrollRepository, Pay
 builder.Services.AddScoped<PayrollDashboard.Services.PayrollIngestionService>();
 builder.Services.AddScoped<PayrollDashboard.Services.PayrollPdfParser>();
 builder.Services.AddScoped<PayrollDashboard.Services.IFileStorageService, PayrollDashboard.Services.LocalFileStorageService>();
+builder.Services.AddScoped<PayrollDashboard.Repositories.IAnnualIncomeRepository, PayrollDashboard.Repositories.SqliteAnnualIncomeRepository>();
+builder.Services.AddScoped<PayrollDashboard.Services.AnnualIncomePdfParser>();
+builder.Services.AddScoped<PayrollDashboard.Services.AnnualIncomeIngestionService>();
 
 var app = builder.Build();
 
