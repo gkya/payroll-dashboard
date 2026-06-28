@@ -26,9 +26,9 @@
             @if (Model.PayrollSlips.Count > 0 || Model.AnnualIncomeSlips.Count > 0)
             {
                 <div class="pr-tabs" id="mainTabs">
-                    <button class="pr-tab active" data-bs-toggle="tab" data-bs-target="#salary-tab">給与</button>
-                    <button class="pr-tab" data-bs-toggle="tab" data-bs-target="#bonus-tab">賞与</button>
-                    <button class="pr-tab" data-bs-toggle="tab" data-bs-target="#annual-tab">源泉徴収票</button>
+                    <button class="pr-tab active" onclick="switchTab('salary-tab',this)">給与</button>
+                    <button class="pr-tab" onclick="switchTab('bonus-tab',this)">賞与</button>
+                    <button class="pr-tab" onclick="switchTab('annual-tab',this)">源泉徴収票</button>
                 </div>
             }
             <div class="pr-theme-toggle" id="themeToggle" onclick="toggleTheme()" role="button" aria-label="テーマ切替">
@@ -520,13 +520,16 @@
             </text>
         }
 
-        // ── タブ pill の active 同期 ──
-        document.querySelectorAll('#mainTabs .pr-tab').forEach(el => {
-            el.addEventListener('shown.bs.tab', () => {
-                document.querySelectorAll('#mainTabs .pr-tab').forEach(t => t.classList.remove('active'));
-                el.classList.add('active');
-            });
-        });
+        // ── カスタムタブ切替（Bootstrap.Tab に依存しない） ──
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.tab-content .tab-pane').forEach(p => p.classList.remove('show','active'));
+            const target = document.getElementById(tabId);
+            if (target) { target.classList.add('active'); requestAnimationFrame(() => target.classList.add('show')); }
+            if (btn) {
+                document.querySelectorAll('#mainTabs .pr-tab').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            }
+        }
 
         // ── テーマトグル ──
         function applyTheme(dark) {
@@ -565,8 +568,7 @@
             if (!tab) return;
 
             if (tab === 'bonus') {
-                const tabEl = document.querySelector('[data-bs-target="#bonus-tab"]');
-                if (tabEl) bootstrap.Tab.getOrCreateInstance(tabEl).show();
+                switchTab('bonus-tab', document.querySelector('#mainTabs .pr-tab:nth-child(2)'));
                 @if (Model.BonusSlips.Count > 0) { <text>filterBonus(year);</text> }
             } else if (tab === 'salary') {
                 @if (Model.SalarySlips.Count > 0) { <text>filterSalary(year);</text> }
