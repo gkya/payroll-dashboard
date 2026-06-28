@@ -178,7 +178,7 @@
                                             ? slip.DeductionAmount!.Value / slip.GrossAmount!.Value * 100 : (decimal?)null;
                                         var netRate = (slip.GrossAmount is > 0 && slip.NetAmount.HasValue)
                                             ? slip.NetAmount!.Value / slip.GrossAmount!.Value * 100 : (decimal?)null;
-                                        <tr data-year="@slip.PayrollMonth[..4]" onclick="location.href='/slip/@slip.Id'" style="cursor:pointer">
+                                        <tr data-year="@slip.PayrollMonth[..4]" onclick="goToSlip(@slip.Id,'salary')" style="cursor:pointer">
                                             <td>@slip.PayrollMonth</td>
                                             <td class="text-end">@(slip.GrossAmount?.ToString("N0") ?? "-")</td>
                                             <td class="text-end">@(slip.BasicAmount?.ToString("N0") ?? "-")</td>
@@ -263,7 +263,7 @@
                                 <tbody>
                                     @foreach (var slip in Model.BonusSlips)
                                     {
-                                        <tr data-year="@slip.PayrollMonth[..4]" onclick="location.href='/slip/@slip.Id'" style="cursor:pointer">
+                                        <tr data-year="@slip.PayrollMonth[..4]" onclick="goToSlip(@slip.Id,'bonus')" style="cursor:pointer">
                                             <td>@slip.PayrollMonth</td>
                                             <td class="text-end">@(slip.GrossAmount?.ToString("N0") ?? "-")</td>
                                             <td class="text-end">@(slip.DeductionAmount?.ToString("N0") ?? "-")</td>
@@ -518,5 +518,31 @@
         );
             </text>
         }
+
+        // 年フィルタを保持したまま詳細ページへ遷移
+        function goToSlip(id, type) {
+            const btn = document.querySelector(`.${type}-year-btn.active`);
+            const year = btn ? btn.dataset.year : 'all';
+            location.href = `/slip/${id}?tab=${type}&year=${year}`;
+        }
+
+        // 詳細ページから戻ったときにタブ・年フィルタを復元
+        (function restoreFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            const tab  = params.get('tab');
+            const year = params.get('year') || 'all';
+            if (!tab) return;
+
+            if (tab === 'bonus') {
+                const tabEl = document.querySelector('[data-bs-target="#bonus-tab"]');
+                if (tabEl) bootstrap.Tab.getOrCreateInstance(tabEl).show();
+                @if (Model.BonusSlips.Count > 0) { <text>filterBonus(year);</text> }
+            } else if (tab === 'salary') {
+                @if (Model.SalarySlips.Count > 0) { <text>filterSalary(year);</text> }
+            }
+
+            // URLをクリーンにする（ブラウザ履歴は変えない）
+            history.replaceState(null, '', location.pathname);
+        })();
     </script>
 }

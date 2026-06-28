@@ -9,15 +9,39 @@
         ? slip.DeductionAmount!.Value / slip.GrossAmount!.Value * 100 : (decimal?)null;
     var netRate = (slip.GrossAmount is > 0 && slip.NetAmount.HasValue)
         ? slip.NetAmount!.Value / slip.GrossAmount!.Value * 100 : (decimal?)null;
+
+    var fromTab  = Request.Query["tab"].ToString();
+    var fromYear = Request.Query["year"].ToString();
+    var backUrl  = string.IsNullOrEmpty(fromTab) ? "/" : $"/?tab={fromTab}&year={fromYear}";
+    var tabParam = string.IsNullOrEmpty(fromTab) ? "" : $"?tab={fromTab}&year={fromYear}";
 }
 
-<div class="d-flex align-items-center mb-4">
-    <a href="/" class="btn btn-outline-secondary btn-sm me-3">← 戻る</a>
-    <h1 class="h4 mb-0">
+<div class="d-flex align-items-center mb-4 gap-2">
+    <a href="@backUrl" class="btn btn-outline-secondary btn-sm">← 戻る</a>
+
+    @if (Model.PrevSlip != null)
+    {
+        <a href="/slip/@Model.PrevSlip.Id@tabParam" class="btn btn-outline-primary btn-sm">‹ @Model.PrevSlip.PayrollMonth</a>
+    }
+    else
+    {
+        <button class="btn btn-outline-primary btn-sm" disabled>‹ 前月</button>
+    }
+
+    <h1 class="h4 mb-0 mx-2">
         <span class="badge @(isBonus ? "bg-warning text-dark" : "bg-primary") me-2">@(isBonus ? "賞与" : "給与")</span>
         @slip.PayrollMonth 明細
     </h1>
-    <span class="ms-3 badge @(slip.ImportStatus == PayrollImportStatus.Parsed ? "bg-success" : "bg-warning")">@slip.ImportStatus</span>
+    <span class="badge @(slip.ImportStatus == PayrollImportStatus.Parsed ? "bg-success" : "bg-warning")">@slip.ImportStatus</span>
+
+    @if (Model.NextSlip != null)
+    {
+        <a href="/slip/@Model.NextSlip.Id@tabParam" class="btn btn-outline-primary btn-sm ms-auto">@Model.NextSlip.PayrollMonth ›</a>
+    }
+    else
+    {
+        <button class="btn btn-outline-primary btn-sm ms-auto" disabled>次月 ›</button>
+    }
 </div>
 
 <div class="row g-4 mb-4">
