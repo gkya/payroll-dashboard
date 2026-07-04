@@ -76,14 +76,19 @@ public class PayrollIngestionService
     return slip;
   }
 
-  public PayrollSlip Import(IFormFile file, string payrollMonth)
+  public (PayrollSlip? Slip, bool IsDuplicate) Import(IFormFile file, string payrollMonth, PayrollSlipType slipType)
   {
     var filePath = _fileStorage.SaveFile(file);
     var hash = ComputeFileHash(filePath);
+
+    if (_repository.ExistsByHash(hash))
+      return (null, true);
+
     var parseResult = _parser.Parse(filePath);
 
     var slip = new PayrollSlip
     {
+      SlipType = slipType,
       PayrollMonth = payrollMonth,
       SourceFileName = file.FileName,
       SourceFilePath = filePath,
@@ -99,6 +104,6 @@ public class PayrollIngestionService
     };
 
     _repository.Save(slip);
-    return slip;
+    return (slip, false);
   }
 }

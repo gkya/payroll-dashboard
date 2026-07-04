@@ -10,15 +10,21 @@ public class ImportModel : PageModel
     private readonly ILogger<ImportModel> _logger;
     private readonly PayrollIngestionService _ingestionService;
     private readonly AnnualIncomeIngestionService _annualIncomeIngestionService;
+
     [BindProperty]
     public IFormFile? UploadFile { get; set; }
 
     [BindProperty]
     public string? PayrollMonth { get; set; }
 
-    public string? StatusMessage { get; private set; }
+    [BindProperty]
+    public PayrollSlipType SlipType { get; set; } = PayrollSlipType.Salary;
 
+    public string? StatusMessage { get; private set; }
+    public bool IsError { get; private set; }
     public PayrollSlip? CurrentSlip { get; private set; }
+    public string? BulkMessage { get; private set; }
+    public string? AnnualBulkMessage { get; private set; }
 
     public ImportModel(ILogger<ImportModel> logger, PayrollIngestionService ingestionService, AnnualIncomeIngestionService annualIncomeIngestionService)
     {
@@ -27,9 +33,6 @@ public class ImportModel : PageModel
         _annualIncomeIngestionService = annualIncomeIngestionService;
     }
 
-    public string? BulkMessage { get; private set; }
-    public string? AnnualBulkMessage { get; private set; }
-
     public void OnGet()
     {
         _logger.LogInformation("Import page was opened.");
@@ -37,7 +40,7 @@ public class ImportModel : PageModel
 
     public IActionResult OnPostImportAll()
     {
-        var root = Path.Combine(Directory.GetCurrentDirectory(), "datas");
+        var root      = Path.Combine(Directory.GetCurrentDirectory(), "datas");
         var salaryDir = Path.Combine(root, "salary");
         var bonusDir  = Path.Combine(root, "bonus");
 
@@ -69,7 +72,8 @@ public class ImportModel : PageModel
     {
         if (UploadFile == null)
         {
-            StatusMessage = "Please select a file.";
+            StatusMessage = "ファイルを選択してください。";
+            IsError = true;
             return Page();
         }
 
@@ -79,13 +83,21 @@ public class ImportModel : PageModel
         if (string.IsNullOrEmpty(PayrollMonth))
         {
             StatusMessage = "支給月を入力してください。ファイル名から自動取得できませんでした。";
+            IsError = true;
             return Page();
         }
 
-        var slip = _ingestionService.Import(UploadFile, PayrollMonth);
-        CurrentSlip = slip;
-        StatusMessage = "File imported successfully.";
+        var (slip, isDuplicate) = _ingestionService.Import(UploadFile, PayrollMonth, SlipType);
 
+        if (isDuplicate)
+        {
+            StatusMessage = "このファイルはすでに取り込み済みです（重複）。";
+            IsError = true;
+            return Page();
+        }
+
+        CurrentSlip = slip;
+        StatusMessage = "取り込みました。";
         return Page();
     }
 }

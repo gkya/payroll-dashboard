@@ -41,19 +41,33 @@
                 </div>
             </div>
 
+            <div style="margin-top:14px;">
+                <div class="pr-label">種別</div>
+                <div style="display:flex; gap:16px;">
+                    <label class="pr-radio-label">
+                        <input type="radio" asp-for="SlipType" value="Salary" checked />
+                        給与
+                    </label>
+                    <label class="pr-radio-label">
+                        <input type="radio" asp-for="SlipType" value="Bonus" />
+                        賞与
+                    </label>
+                </div>
+            </div>
+
             <button class="pr-btn pr-btn--primary" type="submit" style="margin-top:16px;">アップロード</button>
         </form>
 
         @if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
         {
-            <div class="pr-notice pr-notice--info" style="margin-top:14px;">@Model.StatusMessage</div>
-        }
-
-        @if (Model.CurrentSlip is not null)
-        {
-            <div class="pr-notice pr-notice--ok" style="margin-top:14px;">
-                <strong>@Model.CurrentSlip.SourceFileName</strong> を取り込みました
-                <span style="margin-left:12px; font:500 11px/1 var(--pr-font-mono); opacity:.7;">@Model.CurrentSlip.PayrollMonth</span>
+            <div class="pr-notice @(Model.IsError ? "pr-notice--err" : "pr-notice--ok")" style="margin-top:14px;">
+                @Model.StatusMessage
+                @if (!Model.IsError && Model.CurrentSlip is not null)
+                {
+                    <span style="margin-left:12px; font:500 11px/1 var(--pr-font-mono); opacity:.7;">
+                        @Model.CurrentSlip.PayrollMonth ・ @Model.CurrentSlip.SlipType
+                    </span>
+                }
             </div>
         }
     </div>
@@ -151,8 +165,17 @@ html.dark .pr-btn--primary {
     font-size: 13px;
 }
 .pr-notice--ok  { background: rgba(15,118,110,.08); border: 1px solid rgba(15,118,110,.2); color: var(--pr-text); }
+.pr-notice--err { background: rgba(225,29,72,.07); border: 1px solid rgba(225,29,72,.2); color: var(--pr-text); }
 .pr-notice--info { background: var(--pr-faint); border: 1px solid var(--pr-border); color: var(--pr-text); }
 html.dark .pr-notice--ok { background: rgba(45,212,191,.08); border-color: rgba(45,212,191,.25); }
+.pr-radio-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font: 500 13px/1 var(--pr-font-sans);
+    color: var(--pr-text);
+    cursor: pointer;
+}
 </style>
 <script>
 (function() {
