@@ -22,9 +22,6 @@ public class ImportModel : PageModel
 
     public string? StatusMessage { get; private set; }
     public bool IsError { get; private set; }
-    public PayrollSlip? CurrentSlip { get; private set; }
-    public string? BulkMessage { get; private set; }
-    public string? AnnualBulkMessage { get; private set; }
 
     public ImportModel(ILogger<ImportModel> logger, PayrollIngestionService ingestionService, AnnualIncomeIngestionService annualIncomeIngestionService)
     {
@@ -50,8 +47,11 @@ public class ImportModel : PageModel
         if (Directory.Exists(bonusDir))
             count += _ingestionService.ImportAllFromDirectory(bonusDir, PayrollSlipType.Bonus).Count;
 
-        BulkMessage = count == 0 ? "新しい PDF はありませんでした。" : $"{count} 件取り込みました。";
-        return Page();
+        TempData["ImportMessage"] = count == 0
+            ? "新しい PDF はありませんでした。"
+            : $"{count} 件取り込みました。";
+
+        return RedirectToPage("/Index");
     }
 
     public IActionResult OnPostImportAnnualIncome()
@@ -59,13 +59,17 @@ public class ImportModel : PageModel
         var dir = Path.Combine(Directory.GetCurrentDirectory(), "datas", "annual_income");
         if (!Directory.Exists(dir))
         {
-            AnnualBulkMessage = "datas/annual_income フォルダが見つかりません。";
+            StatusMessage = "datas/annual_income フォルダが見つかりません。";
+            IsError = true;
             return Page();
         }
 
         var count = _annualIncomeIngestionService.ImportAllFromDirectory(dir).Count;
-        AnnualBulkMessage = count == 0 ? "新しい PDF はありませんでした。" : $"{count} 件取り込みました。";
-        return Page();
+        TempData["ImportMessage"] = count == 0
+            ? "新しい PDF はありませんでした。"
+            : $"{count} 件取り込みました。";
+
+        return RedirectToPage("/Index");
     }
 
     public IActionResult OnPost()
@@ -96,8 +100,7 @@ public class ImportModel : PageModel
             return Page();
         }
 
-        CurrentSlip = slip;
-        StatusMessage = "取り込みました。";
-        return Page();
+        TempData["ImportMessage"] = $"{slip!.SourceFileName} を取り込みました。";
+        return RedirectToPage("/Index");
     }
 }

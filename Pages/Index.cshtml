@@ -15,6 +15,11 @@
 
 <div class="pr-shell">
 
+    @if (TempData["ImportMessage"] is string importMsg)
+    {
+        <div class="pr-import-notice">@importMsg</div>
+    }
+
     @* ── Header ── *@
     <div class="pr-header">
         <div>

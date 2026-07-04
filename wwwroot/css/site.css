@@ -305,6 +305,20 @@ html.dark .pr-pill.active {
 html.dark .pr-badge--ok  { background: rgba(45,212,191,.1); color: #2dd4bf; border-color: rgba(45,212,191,.3); }
 html.dark .pr-badge--err { background: rgba(251,191,36,.08); color: #fbbf24; border-color: rgba(251,191,36,.25); }
 
+/* ── Import flash notice ── */
+.pr-import-notice {
+  padding: 12px 38px;
+  font: 500 13px/1 var(--pr-font-sans);
+  background: rgba(15,118,110,.08);
+  border-bottom: 1px solid rgba(15,118,110,.2);
+  color: var(--pr-text);
+  transition: background .25s;
+}
+html.dark .pr-import-notice {
+  background: rgba(45,212,191,.08);
+  border-color: rgba(45,212,191,.2);
+}
+
 /* ── Empty state ── */
 .pr-empty {
   padding: 52px 38px;

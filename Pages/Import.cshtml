@@ -60,15 +60,7 @@
 
         @if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
         {
-            <div class="pr-notice @(Model.IsError ? "pr-notice--err" : "pr-notice--ok")" style="margin-top:14px;">
-                @Model.StatusMessage
-                @if (!Model.IsError && Model.CurrentSlip is not null)
-                {
-                    <span style="margin-left:12px; font:500 11px/1 var(--pr-font-mono); opacity:.7;">
-                        @Model.CurrentSlip.PayrollMonth ・ @Model.CurrentSlip.SlipType
-                    </span>
-                }
-            </div>
+            <div class="pr-notice pr-notice--err" style="margin-top:14px;">@Model.StatusMessage</div>
         }
     </div>
 
@@ -85,15 +77,6 @@
                 <button class="pr-btn pr-btn--ghost" type="submit">源泉徴収票を一括取込</button>
             </form>
         </div>
-
-        @if (!string.IsNullOrWhiteSpace(Model.BulkMessage))
-        {
-            <div class="pr-notice pr-notice--ok" style="margin-top:14px;">@Model.BulkMessage</div>
-        }
-        @if (!string.IsNullOrWhiteSpace(Model.AnnualBulkMessage))
-        {
-            <div class="pr-notice pr-notice--ok" style="margin-top:14px;">@Model.AnnualBulkMessage</div>
-        }
     </div>
 
 </div>
